@@ -191,6 +191,7 @@ class RpcsTest : public CreateContactAndNodeId, public testing::Test {
   virtual void TearDown() {}
 
   ~RpcsTest() {
+    transport_->StopListening();
     asio_service_.Stop();
     local_asio_.Stop();
   }
@@ -288,6 +289,7 @@ class RpcsTest : public CreateContactAndNodeId, public testing::Test {
   }
 
   void StopAndReset() {
+    transport_->StopListening();
     asio_service_.Stop();
     local_asio_.Stop();
   }
@@ -364,11 +366,9 @@ TYPED_TEST_P(RpcsTest, FUNC_PingTarget) {
   this->rpcs_->Ping(GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_,
       std::bind(&TestCallback, args::_1, args::_2, &done, &response_code));
-
   while (!done)
     Sleep(boost::posix_time::milliseconds(10));
   this->StopAndReset();
-
   EXPECT_EQ(kSuccess, response_code);
 }
 
@@ -1591,6 +1591,10 @@ class RpcsMultiServerNodesTest : public CreateContactAndNodeId,
   }
 
   ~RpcsMultiServerNodesTest() {
+    std::for_each(transport_.begin(), transport_.end(),
+                  [](TransportPtr transport) {
+        transport->StopListening();
+    });
     std::for_each(asio_services_.begin(), asio_services_.end(),
                   [](std::shared_ptr<AsioService> asio_service) {
         asio_service->Stop();
@@ -1603,6 +1607,10 @@ class RpcsMultiServerNodesTest : public CreateContactAndNodeId,
   }
 
   void StopAndReset() {
+    std::for_each(transport_.begin(), transport_.end(),
+                  [](TransportPtr transport) {
+        transport->StopListening();
+    });
     std::for_each(asio_services_.begin(), asio_services_.end(),
                   [](std::shared_ptr<AsioService> asio_service) {
         asio_service->Stop();
