@@ -366,9 +366,11 @@ TYPED_TEST_P(RpcsTest, FUNC_PingTarget) {
   this->rpcs_->Ping(GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_,
       std::bind(&TestCallback, args::_1, args::_2, &done, &response_code));
+
   while (!done)
     Sleep(boost::posix_time::milliseconds(10));
   this->StopAndReset();
+
   EXPECT_EQ(kSuccess, response_code);
 }
 
