@@ -34,116 +34,116 @@
 #==============================================================================#
 
 
-SET(MS_PROJECT_NAME maidsafe_dht)
+set(MS_PROJECT_NAME maidsafe_dht)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.4 FATAL_ERROR)
-MESSAGE("================================================================================\n")
+cmake_minimum_required(VERSION 2.8.4 FATAL_ERROR)
+message("================================================================================\n")
 
-GET_FILENAME_COMPONENT(CMAKE_BUILD_TYPE_DIR ${CMAKE_BINARY_DIR} NAME)
+get_filename_component(CMAKE_BUILD_TYPE_DIR ${CMAKE_BINARY_DIR} NAME)
 
 # Variable MSVC is not set until after "PROJECT" command below
-IF(CMAKE_BUILD_TYPE_DIR MATCHES "Win_MSVC")
-  SET(CMAKE_BUILD_TYPE_DIR Release)
-ELSEIF(CMAKE_BUILD_TYPE_DIR MATCHES "kdev")
-  SET(CMAKE_BUILD_TYPE_DIR Debug)
-  SET(KDEV 1)
-ENDIF()
+if(CMAKE_BUILD_TYPE_DIR MATCHES "Win_MSVC")
+  set(CMAKE_BUILD_TYPE_DIR Release)
+elseif(CMAKE_BUILD_TYPE_DIR MATCHES "kdev")
+  set(CMAKE_BUILD_TYPE_DIR Debug)
+  set(KDEV 1)
+endif()
 
-IF(NOT ${CMAKE_C_COMPILER_WORKS})
-  MESSAGE(FATAL_ERROR "No generator previously specified.\nTo see a full list of generators, run:\n\tcmake --help\n")
-ENDIF()
+if(NOT ${CMAKE_C_COMPILER_WORKS})
+  message(FATAL_ERROR "No generator previously specified.\nTo see a full list of generators, run:\n\tcmake --help\n")
+endif()
 
 # This "PROJECT" command resets CMAKE_BUILD_TYPE, hence it's copied from CMAKE_BUILD_TYPE_DIR which is set above.
-IF((CMAKE_BUILD_TYPE_DIR MATCHES "Release") OR (DEFINED ${KDEV}))
-  PROJECT(${MS_PROJECT_NAME})
-ELSE()
-  STRING(TOLOWER ${CMAKE_BUILD_TYPE_DIR} MS_PROJECT_NAME_APPENDIX)
-  PROJECT(${MS_PROJECT_NAME}_${MS_PROJECT_NAME_APPENDIX})
-ENDIF()
+if((CMAKE_BUILD_TYPE_DIR MATCHES "Release") OR (DEFINED ${KDEV}))
+  project(${MS_PROJECT_NAME})
+else()
+  string(TOLOWER ${CMAKE_BUILD_TYPE_DIR} MS_PROJECT_NAME_APPENDIX)
+  project(${MS_PROJECT_NAME}_${MS_PROJECT_NAME_APPENDIX})
+endif()
 
-SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE_DIR} CACHE INTERNAL "Except for MSVC, the build type is set by running cmake from the appropriate build subdirectory e.g. for a Debug build, \"cd build/Linux/Debug && cmake ../../..\"." FORCE)
+set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE_DIR} CACHE INTERNAL "Except for MSVC, the build type is set by running cmake from the appropriate build subdirectory e.g. for a Debug build, \"cd build/Linux/Debug && cmake ../../..\"." FORCE)
 
 
 ###################################################################################################
 # MaidSafe Common & Transport library search                                                      #
 ###################################################################################################
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build)
-INCLUDE(maidsafe_find_common)
-ADD_MAIDSAFE_LIBRARY(MaidSafe-Transport)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build)
+include(maidsafe_find_common)
+add_maidsafe_library(MaidSafe-Transport)
 
 
 ###################################################################################################
 # Standard setup                                                                                  #
 ###################################################################################################
-SET(PROTO_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
-FILE(GLOB PROTO_FILES_KADEMLIA RELATIVE ${PROTO_SOURCE_DIR} "${PROTO_SOURCE_DIR}/maidsafe/dht/*.proto")
-FILE(GLOB PROTO_FILES_TESTS RELATIVE ${PROTO_SOURCE_DIR} "${PROTO_SOURCE_DIR}/maidsafe/dht/tests/*.proto")
-SET(PROTO_FILES "${PROTO_FILES_KADEMLIA};${PROTO_FILES_TESTS}")
-INCLUDE(maidsafe_standard_setup)
-HANDLE_VERSIONS(${PROJECT_SOURCE_DIR}/src/maidsafe/dht/version.h)
+set(PROTO_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
+file(GLOB PROTO_FILES_KADEMLIA RELATIVE ${PROTO_SOURCE_DIR} "${PROTO_SOURCE_DIR}/maidsafe/dht/*.proto")
+file(GLOB PROTO_FILES_TESTS RELATIVE ${PROTO_SOURCE_DIR} "${PROTO_SOURCE_DIR}/maidsafe/dht/tests/*.proto")
+set(PROTO_FILES "${PROTO_FILES_KADEMLIA};${PROTO_FILES_TESTS}")
+include(maidsafe_standard_setup)
+handle_versions(${PROJECT_SOURCE_DIR}/src/maidsafe/dht/version.h)
 
 
 ###################################################################################################
 # Set up all files as GLOBs                                                                       #
 ###################################################################################################
 ####    CODE    ####
-FILE(GLOB SOURCE_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.cc")
-FILE(GLOB HEADER_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.h")
-FILE(GLOB PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.proto")
-FILE(GLOB SOURCE_PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.cc")
-FILE(GLOB HEADER_PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.h")
-SET(ALL_FILES_DHT_DIR ${SOURCE_FILES_DHT_DIR} ${HEADER_FILES_DHT_DIR} ${PROTO_FILES_DHT_DIR})
-SET(STYLE_DHT ${ALL_FILES_DHT_DIR})
-LIST(REMOVE_ITEM STYLE_DHT ${SOURCE_PROTO_FILES_DHT_DIR} ${HEADER_PROTO_FILES_DHT_DIR} ${PROTO_FILES_DHT_DIR})
-LIST(REMOVE_ITEM SOURCE_FILES_DHT_DIR ${SOURCE_PROTO_FILES_DHT_DIR})
-LIST(REMOVE_ITEM HEADER_FILES_DHT_DIR ${HEADER_PROTO_FILES_DHT_DIR})
-SOURCE_GROUP("DHT Source Files" FILES ${SOURCE_FILES_DHT_DIR})
-SOURCE_GROUP("DHT Header Files" FILES ${HEADER_FILES_DHT_DIR})
-SOURCE_GROUP("DHT Proto Files" FILES ${PROTO_FILES_DHT_DIR} ${SOURCE_PROTO_FILES_DHT_DIR} ${HEADER_PROTO_FILES_DHT_DIR})
+file(GLOB SOURCE_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.cc")
+file(GLOB HEADER_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.h")
+file(GLOB PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.proto")
+file(GLOB SOURCE_PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.cc")
+file(GLOB HEADER_PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.h")
+set(ALL_FILES_DHT_DIR ${SOURCE_FILES_DHT_DIR} ${HEADER_FILES_DHT_DIR} ${PROTO_FILES_DHT_DIR})
+set(STYLE_DHT ${ALL_FILES_DHT_DIR})
+list(REMOVE_ITEM STYLE_DHT ${SOURCE_PROTO_FILES_DHT_DIR} ${HEADER_PROTO_FILES_DHT_DIR} ${PROTO_FILES_DHT_DIR})
+list(REMOVE_ITEM SOURCE_FILES_DHT_DIR ${SOURCE_PROTO_FILES_DHT_DIR})
+list(REMOVE_ITEM HEADER_FILES_DHT_DIR ${HEADER_PROTO_FILES_DHT_DIR})
+source_group("DHT Source Files" FILES ${SOURCE_FILES_DHT_DIR})
+source_group("DHT Header Files" FILES ${HEADER_FILES_DHT_DIR})
+source_group("DHT Proto Files" FILES ${PROTO_FILES_DHT_DIR} ${SOURCE_PROTO_FILES_DHT_DIR} ${HEADER_PROTO_FILES_DHT_DIR})
 
 ####    BENCHMARK, DEMO & TESTS    ####
-FILE(GLOB SOURCE_FILES_BENCHMARK_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/benchmark/*.cc")
-FILE(GLOB HEADER_FILES_BENCHMARK_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/benchmark/*.h")
-SET(ALL_FILES_BENCHMARK_DIR ${SOURCE_FILES_BENCHMARK_DIR} ${HEADER_FILES_BENCHMARK_DIR})
-SOURCE_GROUP("Benchmark Source Files" FILES ${SOURCE_FILES_BENCHMARK_DIR})
-SOURCE_GROUP("Benchmark Header Files" FILES ${HEADER_FILES_BENCHMARK_DIR})
+file(GLOB SOURCE_FILES_BENCHMARK_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/benchmark/*.cc")
+file(GLOB HEADER_FILES_BENCHMARK_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/benchmark/*.h")
+set(ALL_FILES_BENCHMARK_DIR ${SOURCE_FILES_BENCHMARK_DIR} ${HEADER_FILES_BENCHMARK_DIR})
+source_group("Benchmark Source Files" FILES ${SOURCE_FILES_BENCHMARK_DIR})
+source_group("Benchmark Header Files" FILES ${HEADER_FILES_BENCHMARK_DIR})
 
-FILE(GLOB SOURCE_FILES_DEMO_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/demo/*.cc")
-FILE(GLOB HEADER_FILES_DEMO_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/demo/*.h")
-SET(ALL_FILES_DEMO_DIR ${SOURCE_FILES_DEMO_DIR} ${HEADER_FILES_DEMO_DIR})
-SOURCE_GROUP("Demo Source Files" FILES ${SOURCE_FILES_DEMO_DIR})
-SOURCE_GROUP("Demo Header Files" FILES ${HEADER_FILES_DEMO_DIR})
+file(GLOB SOURCE_FILES_DEMO_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/demo/*.cc")
+file(GLOB HEADER_FILES_DEMO_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/demo/*.h")
+set(ALL_FILES_DEMO_DIR ${SOURCE_FILES_DEMO_DIR} ${HEADER_FILES_DEMO_DIR})
+source_group("Demo Source Files" FILES ${SOURCE_FILES_DEMO_DIR})
+source_group("Demo Header Files" FILES ${HEADER_FILES_DEMO_DIR})
 
-FILE(GLOB SOURCE_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.cc")
-FILE(GLOB HEADER_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.h")
-FILE(GLOB PROTO_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.proto")
-FILE(GLOB SOURCE_PROTO_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.pb.cc")
-FILE(GLOB HEADER_PROTO_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.pb.h")
-SET(ALL_FILES_DHT_TESTS_DIR ${SOURCE_FILES_DHT_TESTS_DIR} ${HEADER_FILES_DHT_TESTS_DIR} ${PROTO_FILES_DHT_TESTS_DIR})
-SET(STYLE_DHT_TESTS ${ALL_FILES_DHT_TESTS_DIR})
-LIST(REMOVE_ITEM STYLE_DHT_TESTS ${SOURCE_PROTO_FILES_DHT_TESTS_DIR} ${HEADER_PROTO_FILES_DHT_TESTS_DIR} ${PROTO_FILES_DHT_TESTS_DIR})
-LIST(REMOVE_ITEM SOURCE_FILES_DHT_TESTS_DIR ${SOURCE_PROTO_FILES_DHT_TESTS_DIR})
-LIST(REMOVE_ITEM HEADER_FILES_DHT_TESTS_DIR ${HEADER_PROTO_FILES_DHT_TESTS_DIR})
-SOURCE_GROUP("DHT Tests Source Files" FILES ${SOURCE_FILES_DHT_TESTS_DIR})
-SOURCE_GROUP("DHT Tests Header Files" FILES ${HEADER_FILES_DHT_TESTS_DIR})
-SOURCE_GROUP("DHT Tests Proto Files" FILES ${PROTO_FILES_DHT_TESTS_DIR} ${SOURCE_PROTO_FILES_DHT_TESTS_DIR} ${HEADER_PROTO_FILES_DHT_TESTS_DIR})
+file(GLOB SOURCE_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.cc")
+file(GLOB HEADER_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.h")
+file(GLOB PROTO_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.proto")
+file(GLOB SOURCE_PROTO_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.pb.cc")
+file(GLOB HEADER_PROTO_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.pb.h")
+set(ALL_FILES_DHT_TESTS_DIR ${SOURCE_FILES_DHT_TESTS_DIR} ${HEADER_FILES_DHT_TESTS_DIR} ${PROTO_FILES_DHT_TESTS_DIR})
+set(STYLE_DHT_TESTS ${ALL_FILES_DHT_TESTS_DIR})
+list(REMOVE_ITEM STYLE_DHT_TESTS ${SOURCE_PROTO_FILES_DHT_TESTS_DIR} ${HEADER_PROTO_FILES_DHT_TESTS_DIR} ${PROTO_FILES_DHT_TESTS_DIR})
+list(REMOVE_ITEM SOURCE_FILES_DHT_TESTS_DIR ${SOURCE_PROTO_FILES_DHT_TESTS_DIR})
+list(REMOVE_ITEM HEADER_FILES_DHT_TESTS_DIR ${HEADER_PROTO_FILES_DHT_TESTS_DIR})
+source_group("DHT Tests Source Files" FILES ${SOURCE_FILES_DHT_TESTS_DIR})
+source_group("DHT Tests Header Files" FILES ${HEADER_FILES_DHT_TESTS_DIR})
+source_group("DHT Tests Proto Files" FILES ${PROTO_FILES_DHT_TESTS_DIR} ${SOURCE_PROTO_FILES_DHT_TESTS_DIR} ${HEADER_PROTO_FILES_DHT_TESTS_DIR})
 
-FILE(GLOB SOURCE_FILES_DHT_TESTS_FUNCTIONAL_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/*.cc")
-FILE(GLOB HEADER_FILES_DHT_TESTS_FUNCTIONAL_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/*.h")
-SET(ALL_FILES_DHT_TESTS_FUNCTIONAL_DIR ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_DIR} ${HEADER_FILES_DHT_TESTS_FUNCTIONAL_DIR})
-SOURCE_GROUP("Functional Tests Source Files" FILES ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_DIR})
-SOURCE_GROUP("Functional Tests Header Files" FILES ${HEADER_FILES_DHT_TESTS_FUNCTIONAL_DIR})
+file(GLOB SOURCE_FILES_DHT_TESTS_FUNCTIONAL_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/*.cc")
+file(GLOB HEADER_FILES_DHT_TESTS_FUNCTIONAL_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/*.h")
+set(ALL_FILES_DHT_TESTS_FUNCTIONAL_DIR ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_DIR} ${HEADER_FILES_DHT_TESTS_FUNCTIONAL_DIR})
+source_group("Functional Tests Source Files" FILES ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_DIR})
+source_group("Functional Tests Header Files" FILES ${HEADER_FILES_DHT_TESTS_FUNCTIONAL_DIR})
 
-SET(SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/node_test.cc"
+set(SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/node_test.cc"
                                            "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/test_utils.cc"
                                            "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/test_main.cc")
-SET(SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_IMPL "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/node_impl_test.cc"
+set(SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_IMPL "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/node_impl_test.cc"
                                                 "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/test_utils.cc"
                                                 "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/test_main.cc")
-SET(SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_CHURN "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/node_churn_test.cc"
+set(SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_CHURN "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/node_churn_test.cc"
                                                  "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/test_utils.cc"
                                                  "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/test_main.cc")
-SET(HEADER_FILES_DHT_TESTS_FUNCTIONALS "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/test_node_environment.h"
+set(HEADER_FILES_DHT_TESTS_FUNCTIONALS "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/test_node_environment.h"
                                        "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/test_utils.h"
                                        "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/local_network.h")
 
@@ -151,65 +151,65 @@ SET(HEADER_FILES_DHT_TESTS_FUNCTIONALS "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/t
 ###################################################################################################
 # Define MaidSafe libraries and executables                                                       #
 ###################################################################################################
-MS_ADD_STATIC_LIBRARY(${MS_PROJECT_NAME} ${ALL_FILES_DHT_DIR})
-MS_ADD_EXECUTABLE(TESTkademlia Tests ${ALL_FILES_DHT_TESTS_DIR})
-MS_ADD_EXECUTABLE(TESTnode_functional Tests ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
-MS_ADD_EXECUTABLE(TESTnode_impl_functional Tests ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_IMPL} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
-MS_ADD_EXECUTABLE(TESTnode_churn Tests ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_CHURN} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
-MS_ADD_EXECUTABLE(KademliaDemo Demo ${ALL_FILES_DEMO_DIR})
-MS_ADD_EXECUTABLE(Benchmark Benchmark ${ALL_FILES_BENCHMARK_DIR})
+ms_add_static_library(${MS_PROJECT_NAME} ${ALL_FILES_DHT_DIR})
+ms_add_executable(TESTkademlia Tests ${ALL_FILES_DHT_TESTS_DIR})
+ms_add_executable(TESTnode_functional Tests ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
+ms_add_executable(TESTnode_impl_functional Tests ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_IMPL} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
+ms_add_executable(TESTnode_churn Tests ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_CHURN} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
+ms_add_executable(KademliaDemo Demo ${ALL_FILES_DEMO_DIR})
+ms_add_executable(Benchmark Benchmark ${ALL_FILES_BENCHMARK_DIR})
 
 # This target allows maidsafe_dht_static to be installed without building all project targets
-IF(MSVC)
-  ADD_CUSTOM_TARGET(install_fast ${CMAKE_COMMAND} -DBUILD_TYPE=$<CONFIGURATION> -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
-ELSE()
-  ADD_CUSTOM_TARGET(install_fast ${CMAKE_COMMAND} -DBUILD_TYPE=${CMAKE_BUILD_TYPE} -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
-ENDIF()
-ADD_DEPENDENCIES(install_fast maidsafe_dht_static)
+if(MSVC)
+  add_custom_target(install_fast ${CMAKE_COMMAND} -DBUILD_TYPE=$<CONFIGURATION> -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
+else()
+  add_custom_target(install_fast ${CMAKE_COMMAND} -DBUILD_TYPE=${CMAKE_BUILD_TYPE} -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
+endif()
+add_dependencies(install_fast maidsafe_dht_static)
 
-IF(NOT APPLE)
-TARGET_LINK_LIBRARIES(maidsafe_dht_static
-                        maidsafe_transport_static
-                        maidsafe_common_static
-                        breakpad_static
-                        boost_date_time
-                        boost_regex)
-ELSE()
-TARGET_LINK_LIBRARIES(maidsafe_dht_static
-                        maidsafe_transport_static
-                        maidsafe_common_static
-                        boost_date_time
-                        boost_regex)
-ENDIF()
-TARGET_LINK_LIBRARIES(TESTkademlia maidsafe_dht_static gmock_static)
-TARGET_LINK_LIBRARIES(TESTnode_functional maidsafe_dht_static gtest_static)
-TARGET_LINK_LIBRARIES(TESTnode_impl_functional maidsafe_dht_static gtest_static)
-TARGET_LINK_LIBRARIES(TESTnode_churn maidsafe_dht_static gtest_static)
-TARGET_LINK_LIBRARIES(KademliaDemo maidsafe_dht_static boost_program_options)
-TARGET_LINK_LIBRARIES(Benchmark maidsafe_dht_static boost_program_options)
+if(NOT APPLE)
+  target_link_libraries(maidsafe_dht_static
+                          maidsafe_transport_static
+                          maidsafe_common_static
+                          breakpad_static
+                          boost_date_time
+                          boost_regex)
+else()
+  target_link_libraries(maidsafe_dht_static
+                          maidsafe_transport_static
+                          maidsafe_common_static
+                          boost_date_time
+                          boost_regex)
+endif()
+target_link_libraries(TESTkademlia maidsafe_dht_static gmock_static)
+target_link_libraries(TESTnode_functional maidsafe_dht_static gtest_static)
+target_link_libraries(TESTnode_impl_functional maidsafe_dht_static gtest_static)
+target_link_libraries(TESTnode_churn maidsafe_dht_static gtest_static)
+target_link_libraries(KademliaDemo maidsafe_dht_static boost_program_options)
+target_link_libraries(Benchmark maidsafe_dht_static boost_program_options)
 
 
 ###################################################################################################
 # Set compiler and linker flags                                                                   #
 ###################################################################################################
-INCLUDE(maidsafe_standard_flags)
+include(maidsafe_standard_flags)
 
-SET_TARGET_PROPERTIES(TESTnode_functional PROPERTIES COMPILE_DEFINITIONS "FUNCTIONAL_NODE_TEST")
-SET_TARGET_PROPERTIES(TESTnode_impl_functional PROPERTIES COMPILE_DEFINITIONS "FUNCTIONAL_NODE_IMPL_TEST")
-SET_TARGET_PROPERTIES(TESTnode_churn PROPERTIES COMPILE_DEFINITIONS "FUNCTIONAL_CHURN_TEST")
+set_target_properties(TESTnode_functional PROPERTIES COMPILE_DEFINITIONS "FUNCTIONAL_NODE_TEST")
+set_target_properties(TESTnode_impl_functional PROPERTIES COMPILE_DEFINITIONS "FUNCTIONAL_NODE_IMPL_TEST")
+set_target_properties(TESTnode_churn PROPERTIES COMPILE_DEFINITIONS "FUNCTIONAL_CHURN_TEST")
 
-IF(MSVC)
+if(MSVC)
   # Warnings switched off for protocol buffer generated files
-  SET_SOURCE_FILES_PROPERTIES(${PROJECT_SOURCE_DIR}/src/maidsafe/dht/kademlia.pb.cc
+  set_source_files_properties(${PROJECT_SOURCE_DIR}/src/maidsafe/dht/kademlia.pb.cc
                               ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/rpcs.pb.cc
                               ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/wrapper.pb.cc
                                 PROPERTIES COMPILE_FLAGS "/W0")
-  SET_TARGET_PROPERTIES(maidsafe_dht_static TESTkademlia PROPERTIES COMPILE_FLAGS "/bigobj")
-ELSEIF(UNIX)
-  SET_TARGET_PROPERTIES(KademliaDemo PROPERTIES COMPILE_FLAGS "-g")
-  FILE(GLOB PROTO_SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.cc"
+  set_target_properties(maidsafe_dht_static TESTkademlia PROPERTIES COMPILE_FLAGS "/bigobj")
+elseif(UNIX)
+  set_target_properties(KademliaDemo PROPERTIES COMPILE_FLAGS "-g")
+  file(GLOB PROTO_SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.cc"
                                "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/*.pb.cc")
-  SET_SOURCE_FILES_PROPERTIES(${PROJECT_SOURCE_DIR}/src/maidsafe/dht/service.cc
+  set_source_files_properties(${PROJECT_SOURCE_DIR}/src/maidsafe/dht/service.cc
                               ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/node.cc
                               ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/node_impl.cc
                               ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/benchmark/benchmark.cc
@@ -222,72 +222,72 @@ ELSEIF(UNIX)
                               ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/node_test.cc
                               ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/functional/node_impl_test.cc
                               PROPERTIES COMPILE_FLAGS "-Wno-effc++")
-  SET_SOURCE_FILES_PROPERTIES(${PROTO_SOURCE_FILES} PROPERTIES COMPILE_FLAGS "-w")
-ENDIF()
+  set_source_files_properties(${PROTO_SOURCE_FILES} PROPERTIES COMPILE_FLAGS "-w")
+endif()
 
 
 ###################################################################################################
 # Tests                                                                                           #
 ###################################################################################################
-ADD_STYLE_TEST(${STYLE_DHT}
+add_style_test(${STYLE_DHT}
                ${ALL_FILES_BENCHMARK_DIR}
                ${ALL_FILES_DEMO_DIR}
                ${STYLE_DHT_TESTS}
                ${ALL_FILES_DHT_TESTS_FUNCTIONAL_DIR})
 
-ADD_GTESTS(TESTkademlia)
-ADD_GTESTS(TESTnode_functional)
-ADD_GTESTS(TESTnode_impl_functional)
-ADD_GTESTS(TESTnode_churn)
+add_gtests(TESTkademlia)
+add_gtests(TESTnode_functional)
+add_gtests(TESTnode_impl_functional)
+add_gtests(TESTnode_churn)
 
-TEST_SUMMARY_OUTPUT()
+test_summary_output()
 
 # Remove most lengthy tests and style checkers from MemCheck runs.
-ADD_MEMCHECK_IGNORE(STYLE_CHECK)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_Ping)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_Bootstrap)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_JoinClient)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_StoreAndFindSmallValue)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_StoreAndFindBigValue)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_StoreAndFindMultipleValues)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_MultipleNodesFindSingleValue)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_ClientFindValue)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_GetContact)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_FindNonExistingValue)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_FindDeadNode)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_JoinLeave)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_StoreWithInvalidRequest)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_Update)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_FindNodes)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_Delete)
-ADD_MEMCHECK_IGNORE(NodeTest.FUNC_InvalidDeleteRequest)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_JoinLeave/0)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_JoinLeave/1)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_FindNodes/0)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_FindNodes/1)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_Store/0)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_Store/1)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_FindValue/0)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_FindValue/1)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_Delete/0)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_Delete/1)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_Update/1)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_StoreRefresh/0)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_StoreRefresh/1)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_DeleteRefresh/0)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_DeleteRefresh/1)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_GetContact/0)
-ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_GetContact/1)
-ADD_MEMCHECK_IGNORE(NodeChurnTest.FUNC_RandomStartStopNodes)
+add_memcheck_ignore(STYLE_CHECK)
+add_memcheck_ignore(NodeTest.FUNC_Ping)
+add_memcheck_ignore(NodeTest.FUNC_Bootstrap)
+add_memcheck_ignore(NodeTest.FUNC_JoinClient)
+add_memcheck_ignore(NodeTest.FUNC_StoreAndFindSmallValue)
+add_memcheck_ignore(NodeTest.FUNC_StoreAndFindBigValue)
+add_memcheck_ignore(NodeTest.FUNC_StoreAndFindMultipleValues)
+add_memcheck_ignore(NodeTest.FUNC_MultipleNodesFindSingleValue)
+add_memcheck_ignore(NodeTest.FUNC_ClientFindValue)
+add_memcheck_ignore(NodeTest.FUNC_GetContact)
+add_memcheck_ignore(NodeTest.FUNC_FindNonExistingValue)
+add_memcheck_ignore(NodeTest.FUNC_FindDeadNode)
+add_memcheck_ignore(NodeTest.FUNC_JoinLeave)
+add_memcheck_ignore(NodeTest.FUNC_StoreWithInvalidRequest)
+add_memcheck_ignore(NodeTest.FUNC_Update)
+add_memcheck_ignore(NodeTest.FUNC_FindNodes)
+add_memcheck_ignore(NodeTest.FUNC_Delete)
+add_memcheck_ignore(NodeTest.FUNC_InvalidDeleteRequest)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_JoinLeave/0)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_JoinLeave/1)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_FindNodes/0)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_FindNodes/1)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_Store/0)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_Store/1)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_FindValue/0)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_FindValue/1)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_Delete/0)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_Delete/1)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_Update/1)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_StoreRefresh/0)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_StoreRefresh/1)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_DeleteRefresh/0)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_DeleteRefresh/1)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_GetContact/0)
+add_memcheck_ignore(FullOrClient/NodeImplTest.FUNC_GetContact/1)
+add_memcheck_ignore(NodeChurnTest.FUNC_RandomStartStopNodes)
 
 
 ###################################################################################################
 # Install details                                                                                 #
 ###################################################################################################
-FINAL_MESSAGE()
-RENAME_OUTDATED_BUILT_EXES()
+final_message()
+rename_outdated_built_exes()
 
-SET(MAIDSAFE_DHT_INSTALL_FILES
+set(MAIDSAFE_DHT_INSTALL_FILES
       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/config.h
       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/contact.h
       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/maidsafe-dht.h
@@ -299,10 +299,10 @@ SET(MAIDSAFE_DHT_INSTALL_FILES
       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/rpcs_objects.h
       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/version.h)
 
-SET(MAIDSAFE_DHT_TEST_INSTALL_FILES
+set(MAIDSAFE_DHT_TEST_INSTALL_FILES
       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/local_network.h)
 
-MS_INSTALL_LIBS(maidsafe_dht_static)
-MS_INSTALL_HEADERS(dht ${MAIDSAFE_DHT_INSTALL_FILES})
-MS_INSTALL_HEADERS(dht/tests ${MAIDSAFE_DHT_TEST_INSTALL_FILES})
-MS_INSTALL_EXPORT()
+ms_install_libs(maidsafe_dht_static)
+ms_install_headers(dht ${MAIDSAFE_DHT_INSTALL_FILES})
+ms_install_headers(dht/tests ${MAIDSAFE_DHT_TEST_INSTALL_FILES})
+ms_install_export()
