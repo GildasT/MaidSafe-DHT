@@ -34,53 +34,18 @@
 #==============================================================================#
 
 
-SET(MS_PROJECT_NAME maidsafe_dht)
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+SET(MS_PROJECT_NAME dht)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.4 FATAL_ERROR)
 MESSAGE("================================================================================\n")
-
-GET_FILENAME_COMPONENT(CMAKE_BUILD_TYPE_DIR ${CMAKE_BINARY_DIR} NAME)
-
-# Variable MSVC is not set until after "PROJECT" command below
-IF(CMAKE_BUILD_TYPE_DIR MATCHES "Win_MSVC")
-  SET(CMAKE_BUILD_TYPE_DIR Release)
-ELSEIF(CMAKE_BUILD_TYPE_DIR MATCHES "kdev")
-  SET(CMAKE_BUILD_TYPE_DIR Debug)
-  SET(KDEV 1)
-ENDIF()
-
-IF(NOT ${CMAKE_C_COMPILER_WORKS})
-  MESSAGE(FATAL_ERROR "No generator previously specified.\nTo see a full list of generators, run:\n\tcmake --help\n")
-ENDIF()
-
-# This "PROJECT" command resets CMAKE_BUILD_TYPE, hence it's copied from CMAKE_BUILD_TYPE_DIR which is set above.
-IF((CMAKE_BUILD_TYPE_DIR MATCHES "Release") OR (DEFINED ${KDEV}))
-  PROJECT(${MS_PROJECT_NAME})
-ELSE()
-  STRING(TOLOWER ${CMAKE_BUILD_TYPE_DIR} MS_PROJECT_NAME_APPENDIX)
-  PROJECT(${MS_PROJECT_NAME}_${MS_PROJECT_NAME_APPENDIX})
-ENDIF()
-
-SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE_DIR} CACHE INTERNAL "Except for MSVC, the build type is set by running cmake from the appropriate build subdirectory e.g. for a Debug build, \"cd build/Linux/Debug && cmake ../../..\"." FORCE)
-
-
-###################################################################################################
-# MaidSafe Common & Transport library search                                                      #
-###################################################################################################
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build)
-INCLUDE(maidsafe_find_common)
-ADD_MAIDSAFE_LIBRARY(MaidSafe-Transport)
-
-
-###################################################################################################
-# Standard setup                                                                                  #
-###################################################################################################
-SET(PROTO_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
-FILE(GLOB PROTO_FILES_KADEMLIA RELATIVE ${PROTO_SOURCE_DIR} "${PROTO_SOURCE_DIR}/maidsafe/dht/*.proto")
-FILE(GLOB PROTO_FILES_TESTS RELATIVE ${PROTO_SOURCE_DIR} "${PROTO_SOURCE_DIR}/maidsafe/dht/tests/*.proto")
-SET(PROTO_FILES "${PROTO_FILES_KADEMLIA};${PROTO_FILES_TESTS}")
-INCLUDE(maidsafe_standard_setup)
-HANDLE_VERSIONS(${PROJECT_SOURCE_DIR}/src/maidsafe/dht/version.h)
+project(dht)
+set(PROTO_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
+file(GLOB PROTO_FILES RELATIVE ${PROTO_SOURCE_DIR} "${PROTO_SOURCE_DIR}/maidsafe/dht/*.proto")
+include(../../cmake_modules/maidsafe_standard_setup.cmake)
+include_directories(${common_SOURCE_DIR}/include)
+include_directories(${transport_SOURCE_DIR}/include)
 
 
 ###################################################################################################
@@ -90,16 +55,16 @@ HANDLE_VERSIONS(${PROJECT_SOURCE_DIR}/src/maidsafe/dht/version.h)
 FILE(GLOB SOURCE_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.cc")
 FILE(GLOB HEADER_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.h")
 FILE(GLOB PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.proto")
-FILE(GLOB SOURCE_PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.cc")
-FILE(GLOB HEADER_PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.h")
+#FILE(GLOB SOURCE_PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.cc")
+#FILE(GLOB HEADER_PROTO_FILES_DHT_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.h")
 SET(ALL_FILES_DHT_DIR ${SOURCE_FILES_DHT_DIR} ${HEADER_FILES_DHT_DIR} ${PROTO_FILES_DHT_DIR})
 SET(STYLE_DHT ${ALL_FILES_DHT_DIR})
-LIST(REMOVE_ITEM STYLE_DHT ${SOURCE_PROTO_FILES_DHT_DIR} ${HEADER_PROTO_FILES_DHT_DIR} ${PROTO_FILES_DHT_DIR})
-LIST(REMOVE_ITEM SOURCE_FILES_DHT_DIR ${SOURCE_PROTO_FILES_DHT_DIR})
-LIST(REMOVE_ITEM HEADER_FILES_DHT_DIR ${HEADER_PROTO_FILES_DHT_DIR})
+#LIST(REMOVE_ITEM STYLE_DHT ${SOURCE_PROTO_FILES_DHT_DIR} ${HEADER_PROTO_FILES_DHT_DIR} ${PROTO_FILES_DHT_DIR})
+#LIST(REMOVE_ITEM SOURCE_FILES_DHT_DIR ${SOURCE_PROTO_FILES_DHT_DIR})
+#LIST(REMOVE_ITEM HEADER_FILES_DHT_DIR ${HEADER_PROTO_FILES_DHT_DIR})
 SOURCE_GROUP("DHT Source Files" FILES ${SOURCE_FILES_DHT_DIR})
 SOURCE_GROUP("DHT Header Files" FILES ${HEADER_FILES_DHT_DIR})
-SOURCE_GROUP("DHT Proto Files" FILES ${PROTO_FILES_DHT_DIR} ${SOURCE_PROTO_FILES_DHT_DIR} ${HEADER_PROTO_FILES_DHT_DIR})
+#SOURCE_GROUP("DHT Proto Files" FILES ${PROTO_FILES_DHT_DIR} ${SOURCE_PROTO_FILES_DHT_DIR} ${HEADER_PROTO_FILES_DHT_DIR})
 
 ####    BENCHMARK, DEMO & TESTS    ####
 FILE(GLOB SOURCE_FILES_BENCHMARK_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/benchmark/*.cc")
@@ -122,8 +87,8 @@ FILE(GLOB HEADER_PROTO_FILES_DHT_TESTS_DIR "${PROJECT_SOURCE_DIR}/src/maidsafe/d
 SET(ALL_FILES_DHT_TESTS_DIR ${SOURCE_FILES_DHT_TESTS_DIR} ${HEADER_FILES_DHT_TESTS_DIR} ${PROTO_FILES_DHT_TESTS_DIR})
 SET(STYLE_DHT_TESTS ${ALL_FILES_DHT_TESTS_DIR})
 LIST(REMOVE_ITEM STYLE_DHT_TESTS ${SOURCE_PROTO_FILES_DHT_TESTS_DIR} ${HEADER_PROTO_FILES_DHT_TESTS_DIR} ${PROTO_FILES_DHT_TESTS_DIR})
-LIST(REMOVE_ITEM SOURCE_FILES_DHT_TESTS_DIR ${SOURCE_PROTO_FILES_DHT_TESTS_DIR})
-LIST(REMOVE_ITEM HEADER_FILES_DHT_TESTS_DIR ${HEADER_PROTO_FILES_DHT_TESTS_DIR})
+#LIST(REMOVE_ITEM SOURCE_FILES_DHT_TESTS_DIR ${SOURCE_PROTO_FILES_DHT_TESTS_DIR})
+#LIST(REMOVE_ITEM HEADER_FILES_DHT_TESTS_DIR ${HEADER_PROTO_FILES_DHT_TESTS_DIR})
 SOURCE_GROUP("DHT Tests Source Files" FILES ${SOURCE_FILES_DHT_TESTS_DIR})
 SOURCE_GROUP("DHT Tests Header Files" FILES ${HEADER_FILES_DHT_TESTS_DIR})
 SOURCE_GROUP("DHT Tests Proto Files" FILES ${PROTO_FILES_DHT_TESTS_DIR} ${SOURCE_PROTO_FILES_DHT_TESTS_DIR} ${HEADER_PROTO_FILES_DHT_TESTS_DIR})
@@ -165,28 +130,28 @@ IF(MSVC)
 ELSE()
   ADD_CUSTOM_TARGET(install_fast ${CMAKE_COMMAND} -DBUILD_TYPE=${CMAKE_BUILD_TYPE} -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
 ENDIF()
-ADD_DEPENDENCIES(install_fast maidsafe_dht_static)
+ADD_DEPENDENCIES(install_fast maidsafe_dht)
 
 IF(NOT APPLE)
-TARGET_LINK_LIBRARIES(maidsafe_dht_static
-                        maidsafe_transport_static
-                        maidsafe_common_static
-                        breakpad_static
-                        boost_date_time
-                        boost_regex)
+TARGET_LINK_LIBRARIES(maidsafe_dht
+                        maidsafe_transport
+                        maidsafe_common
+                      #  breakpad_static
+                        boost_date_time_static
+                        boost_regex_static)
 ELSE()
-TARGET_LINK_LIBRARIES(maidsafe_dht_static
-                        maidsafe_transport_static
-                        maidsafe_common_static
-                        boost_date_time
-                        boost_regex)
+TARGET_LINK_LIBRARIES(maidsafe_dht
+                        maidsafe_transport
+                        maidsafe_common
+                        boost_date_time_static
+                        boost_regex_static)
 ENDIF()
-TARGET_LINK_LIBRARIES(TESTkademlia maidsafe_dht_static gmock_static)
-TARGET_LINK_LIBRARIES(TESTnode_functional maidsafe_dht_static gtest_static)
-TARGET_LINK_LIBRARIES(TESTnode_impl_functional maidsafe_dht_static gtest_static)
-TARGET_LINK_LIBRARIES(TESTnode_churn maidsafe_dht_static gtest_static)
-TARGET_LINK_LIBRARIES(KademliaDemo maidsafe_dht_static boost_program_options)
-TARGET_LINK_LIBRARIES(Benchmark maidsafe_dht_static boost_program_options)
+TARGET_LINK_LIBRARIES(TESTkademlia maidsafe_dht)
+TARGET_LINK_LIBRARIES(TESTnode_functional maidsafe_dht)
+TARGET_LINK_LIBRARIES(TESTnode_impl_functional maidsafe_dht)
+TARGET_LINK_LIBRARIES(TESTnode_churn maidsafe_dht)
+TARGET_LINK_LIBRARIES(KademliaDemo maidsafe_dht boost_program_options_static)
+TARGET_LINK_LIBRARIES(Benchmark maidsafe_dht boost_program_options_static)
 
 
 ###################################################################################################
@@ -204,7 +169,7 @@ IF(MSVC)
                               ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/rpcs.pb.cc
                               ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/wrapper.pb.cc
                                 PROPERTIES COMPILE_FLAGS "/W0")
-  SET_TARGET_PROPERTIES(maidsafe_dht_static TESTkademlia PROPERTIES COMPILE_FLAGS "/bigobj")
+  SET_TARGET_PROPERTIES(maidsafe_dht TESTkademlia PROPERTIES COMPILE_FLAGS "/bigobj")
 ELSEIF(UNIX)
   SET_TARGET_PROPERTIES(KademliaDemo PROPERTIES COMPILE_FLAGS "-g")
   FILE(GLOB PROTO_SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/*.pb.cc"
@@ -281,28 +246,28 @@ ADD_MEMCHECK_IGNORE(FullOrClient/NodeImplTest.FUNC_GetContact/1)
 ADD_MEMCHECK_IGNORE(NodeChurnTest.FUNC_RandomStartStopNodes)
 
 
-###################################################################################################
-# Install details                                                                                 #
-###################################################################################################
-FINAL_MESSAGE()
-RENAME_OUTDATED_BUILT_EXES()
-
-SET(MAIDSAFE_DHT_INSTALL_FILES
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/config.h
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/contact.h
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/maidsafe-dht.h
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/message_handler.h
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/node-api.h
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/node_container.h
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/node_id.h
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/return_codes.h
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/rpcs_objects.h
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/version.h)
-
-SET(MAIDSAFE_DHT_TEST_INSTALL_FILES
-      ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/local_network.h)
-
-MS_INSTALL_LIBS(maidsafe_dht_static)
-MS_INSTALL_HEADERS(dht ${MAIDSAFE_DHT_INSTALL_FILES})
-MS_INSTALL_HEADERS(dht/tests ${MAIDSAFE_DHT_TEST_INSTALL_FILES})
-MS_INSTALL_EXPORT()
+# ###################################################################################################
+# # Install details                                                                                 #
+# ###################################################################################################
+# FINAL_MESSAGE()
+# RENAME_OUTDATED_BUILT_EXES()
+# 
+# SET(MAIDSAFE_DHT_INSTALL_FILES
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/config.h
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/contact.h
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/maidsafe-dht.h
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/message_handler.h
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/node-api.h
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/node_container.h
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/node_id.h
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/return_codes.h
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/rpcs_objects.h
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/version.h)
+# 
+# SET(MAIDSAFE_DHT_TEST_INSTALL_FILES
+#       ${PROJECT_SOURCE_DIR}/src/maidsafe/dht/tests/local_network.h)
+# 
+# MS_INSTALL_LIBS(maidsafe_dht_static)
+# MS_INSTALL_HEADERS(dht ${MAIDSAFE_DHT_INSTALL_FILES})
+# MS_INSTALL_HEADERS(dht/tests ${MAIDSAFE_DHT_TEST_INSTALL_FILES})
+# MS_INSTALL_EXPORT()
