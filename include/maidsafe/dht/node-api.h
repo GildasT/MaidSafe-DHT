@@ -41,16 +41,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "boost/asio/io_service.hpp"
 #include "boost/date_time/posix_time/posix_time_types.hpp"
 
-#include "maidsafe/common/version.h"
-
 #include "maidsafe/dht/contact.h"
 #include "maidsafe/dht/config.h"
-#include "maidsafe/dht/version.h"
-
-#if MAIDSAFE_DHT_VERSION != 3300
-#  error This API is not compatible with the installed library.\
-    Please update the maidsafe-dht library.
-#endif
 
 
 namespace maidsafe {

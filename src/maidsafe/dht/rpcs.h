@@ -138,7 +138,7 @@ class Rpcs {
   void set_contact(const Contact &contact) { contact_ = contact; }
 
   virtual void Prepare(PrivateKeyPtr private_key,
-                       TransportPtr &transport,
+                       std::shared_ptr<TransportType> &transport,
                        MessageHandlerPtr &message_handler);
 
   std::pair<std::string, std::string> MakeStoreRequestAndSignature(
@@ -233,7 +233,7 @@ template <typename TransportType>
 void Rpcs<TransportType>::Ping(PrivateKeyPtr private_key,
                                const Contact &peer,
                                RpcPingFunctor callback) {
-  TransportPtr transport;
+  std::shared_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -249,11 +249,11 @@ void Rpcs<TransportType>::Ping(PrivateKeyPtr private_key,
 
   // Connect callback to message handler for incoming parsed response or error
   message_handler->on_ping_response()->connect(
-      std::bind(&Rpcs::PingCallback, this, random_data, transport::kSuccess,
-                args::_1, args::_2, object_indx, callback, message,
+      boost::bind(&Rpcs::PingCallback, this, random_data, transport::kSuccess,
+                _1, _2, object_indx, callback, message,
                 rpcs_failure_peer));
   message_handler->on_error()->connect(
-      std::bind(&Rpcs::PingCallback, this, random_data, args::_1,
+      boost::bind(&Rpcs::PingCallback, this, random_data, _1,
                 transport::Info(), protobuf::PingResponse(), object_indx,
                 callback, message, rpcs_failure_peer));
   DLOG(INFO) << "\t2 " << DebugId(contact_) << " PING to " << DebugId(peer);
@@ -268,7 +268,7 @@ void Rpcs<TransportType>::FindValue(const Key &key,
                                     PrivateKeyPtr private_key,
                                     const Contact &peer,
                                     RpcFindValueFunctor callback) {
-  TransportPtr transport;
+  std::shared_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -284,11 +284,11 @@ void Rpcs<TransportType>::FindValue(const Key &key,
   std::string message =
       message_handler->WrapMessage(request, peer.public_key());
   // Connect callback to message handler for incoming parsed response or error
-  message_handler->on_find_value_response()->connect(std::bind(
-      &Rpcs::FindValueCallback, this, transport::kSuccess, args::_1, args::_2,
+  message_handler->on_find_value_response()->connect(boost::bind(
+      &Rpcs::FindValueCallback, this, transport::kSuccess, _1, _2,
       object_indx, callback, message, rpcs_failure_peer));
-  message_handler->on_error()->connect(std::bind(
-      &Rpcs::FindValueCallback, this, args::_1, transport::Info(),
+  message_handler->on_error()->connect(boost::bind(
+      &Rpcs::FindValueCallback, this, _1, transport::Info(),
       protobuf::FindValueResponse(), object_indx, callback, message,
       rpcs_failure_peer));
   DLOG(INFO) << "\t" << DebugId(contact_) << " FIND_VALUE to " << DebugId(peer);
@@ -303,7 +303,7 @@ void Rpcs<TransportType>::FindNodes(const Key &key,
                                     PrivateKeyPtr private_key,
                                     const Contact &peer,
                                     RpcFindNodesFunctor callback) {
-  TransportPtr transport;
+  std::shared_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -319,11 +319,11 @@ void Rpcs<TransportType>::FindNodes(const Key &key,
   std::string message =
       message_handler->WrapMessage(request, peer.public_key());
   // Connect callback to message handler for incoming parsed response or error
-  message_handler->on_find_nodes_response()->connect(std::bind(
-      &Rpcs::FindNodesCallback, this, transport::kSuccess, args::_1, args::_2,
+  message_handler->on_find_nodes_response()->connect(boost::bind(
+      &Rpcs::FindNodesCallback, this, transport::kSuccess, _1, _2,
       object_indx, callback, message, rpcs_failure_peer));
-  message_handler->on_error()->connect(std::bind(
-      &Rpcs::FindNodesCallback, this, args::_1, transport::Info(),
+  message_handler->on_error()->connect(boost::bind(
+      &Rpcs::FindNodesCallback, this, _1, transport::Info(),
       protobuf::FindNodesResponse(), object_indx, callback, message,
       rpcs_failure_peer));
   DLOG(INFO) << "\t" << DebugId(contact_) << " FIND_NODES to " << DebugId(peer);
@@ -340,7 +340,7 @@ void Rpcs<TransportType>::Store(const Key &key,
                                 PrivateKeyPtr private_key,
                                 const Contact &peer,
                                 RpcStoreFunctor callback) {
-  TransportPtr transport;
+  std::shared_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -359,11 +359,11 @@ void Rpcs<TransportType>::Store(const Key &key,
   std::string message =
       message_handler->WrapMessage(request, peer.public_key());
   // Connect callback to message handler for incoming parsed response or error
-  message_handler->on_store_response()->connect(std::bind(
-      &Rpcs::StoreCallback, this, transport::kSuccess, args::_1, args::_2,
+  message_handler->on_store_response()->connect(boost::bind(
+      &Rpcs::StoreCallback, this, transport::kSuccess, _1, _2,
       object_indx, callback, message, rpcs_failure_peer));
-  message_handler->on_error()->connect(std::bind(
-      &Rpcs::StoreCallback, this, args::_1, transport::Info(),
+  message_handler->on_error()->connect(boost::bind(
+      &Rpcs::StoreCallback, this, _1, transport::Info(),
       protobuf::StoreResponse(), object_indx, callback, message,
       rpcs_failure_peer));
   DLOG(INFO) << "\t" << DebugId(contact_) << " STORE to " << DebugId(peer);
@@ -379,7 +379,7 @@ void Rpcs<TransportType>::StoreRefresh(
     PrivateKeyPtr private_key,
     const Contact &peer,
     RpcStoreRefreshFunctor callback) {
-  TransportPtr transport;
+  std::shared_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -396,11 +396,11 @@ void Rpcs<TransportType>::StoreRefresh(
   std::string message =
       message_handler->WrapMessage(request, peer.public_key());
   // Connect callback to message handler for incoming parsed response or error
-  message_handler->on_store_refresh_response()->connect(std::bind(
-      &Rpcs::StoreRefreshCallback, this, transport::kSuccess, args::_1,
-      args::_2, object_indx, callback, message, rpcs_failure_peer));
-  message_handler->on_error()->connect(std::bind(
-      &Rpcs::StoreRefreshCallback, this, args::_1, transport::Info(),
+  message_handler->on_store_refresh_response()->connect(boost::bind(
+      &Rpcs::StoreRefreshCallback, this, transport::kSuccess, _1,
+      _2, object_indx, callback, message, rpcs_failure_peer));
+  message_handler->on_error()->connect(boost::bind(
+      &Rpcs::StoreRefreshCallback, this, _1, transport::Info(),
       protobuf::StoreRefreshResponse(), object_indx, callback, message,
       rpcs_failure_peer));
   DLOG(INFO) << "\t" << DebugId(contact_) << " STORE_REFRESH to "
@@ -417,7 +417,7 @@ void Rpcs<TransportType>::Delete(const Key &key,
                                  PrivateKeyPtr private_key,
                                  const Contact &peer,
                                  RpcDeleteFunctor callback) {
-  TransportPtr transport;
+  std::shared_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -435,11 +435,11 @@ void Rpcs<TransportType>::Delete(const Key &key,
   std::string message =
       message_handler->WrapMessage(request, peer.public_key());
   // Connect callback to message handler for incoming parsed response or error
-  message_handler->on_delete_response()->connect(std::bind(
-      &Rpcs::DeleteCallback, this, transport::kSuccess, args::_1, args::_2,
+  message_handler->on_delete_response()->connect(boost::bind(
+      &Rpcs::DeleteCallback, this, transport::kSuccess, _1, _2,
       object_indx, callback, message, rpcs_failure_peer));
-  message_handler->on_error()->connect(std::bind(
-      &Rpcs::DeleteCallback, this, args::_1, transport::Info(),
+  message_handler->on_error()->connect(boost::bind(
+      &Rpcs::DeleteCallback, this, _1, transport::Info(),
       protobuf::DeleteResponse(), object_indx, callback, message,
       rpcs_failure_peer));
   DLOG(INFO) << "\t" << DebugId(contact_) << " DELETE to " << DebugId(peer);
@@ -455,7 +455,7 @@ void Rpcs<TransportType>::DeleteRefresh(
     PrivateKeyPtr private_key,
     const Contact &peer,
     RpcDeleteRefreshFunctor callback) {
-  TransportPtr transport;
+  std::shared_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -472,11 +472,11 @@ void Rpcs<TransportType>::DeleteRefresh(
   std::string message =
       message_handler->WrapMessage(request, peer.public_key());
   // Connect callback to message handler for incoming parsed response or error
-  message_handler->on_delete_refresh_response()->connect(std::bind(
-      &Rpcs::DeleteRefreshCallback, this, transport::kSuccess, args::_1,
-      args::_2, object_indx, callback, message, rpcs_failure_peer));
-  message_handler->on_error()->connect(std::bind(
-      &Rpcs::DeleteRefreshCallback, this, args::_1, transport::Info(),
+  message_handler->on_delete_refresh_response()->connect(boost::bind(
+      &Rpcs::DeleteRefreshCallback, this, transport::kSuccess, _1,
+      _2, object_indx, callback, message, rpcs_failure_peer));
+  message_handler->on_error()->connect(boost::bind(
+      &Rpcs::DeleteRefreshCallback, this, _1, transport::Info(),
       protobuf::DeleteRefreshResponse(), object_indx, callback, message,
       rpcs_failure_peer));
   DLOG(INFO) << "\t" << DebugId(contact_) << " DELETE_REFRESH to "
@@ -490,7 +490,7 @@ template <typename TransportType>
 void Rpcs<TransportType>::Downlist(const std::vector<NodeId> &node_ids,
                                    PrivateKeyPtr private_key,
                                    const Contact &peer) {
-  TransportPtr transport;
+  std::shared_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   connected_objects_.AddObject(transport, message_handler);
@@ -782,7 +782,7 @@ void Rpcs<TransportType>::DeleteRefreshCallback(
 
 template <typename TransportType>
 void Rpcs<TransportType>::Prepare(PrivateKeyPtr private_key,
-                                  TransportPtr &transport,
+                                  std::shared_ptr<TransportType> &transport,
                                   MessageHandlerPtr &message_handler) {
   transport.reset(new TransportType(asio_service_));
   message_handler.reset(new MessageHandler(private_key ? private_key :
