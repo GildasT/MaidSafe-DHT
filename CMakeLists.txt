@@ -113,11 +113,8 @@ else()
 endif()
 add_dependencies(install_fast maidsafe_dht)
 
-if(NOT APPLE)
-  target_link_libraries(maidsafe_dht maidsafe_transport breakpad)
-else()
-  target_link_libraries(maidsafe_dht maidsafe_transport)
-endif()
+
+target_link_libraries(maidsafe_dht maidsafe_transport)
 target_link_libraries(TESTkademlia maidsafe_dht)
 target_link_libraries(TESTnode_functional maidsafe_dht)
 target_link_libraries(TESTnode_impl_functional maidsafe_dht)
