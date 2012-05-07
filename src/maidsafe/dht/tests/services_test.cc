@@ -70,12 +70,12 @@ const uint16_t g_kKademliaK = 16;
 
 boost::posix_time::time_duration time_out = transport::kDefaultInitialTimeout;
 
-inline void CreateRSAKeys(std::string *public_key, std::string *private_key) {
-  asymm::Keys kp;
-  asymm::GenerateKeyPair(&kp);
-  asymm::EncodePublicKey(kp.public_key, public_key);
-  asymm::EncodePrivateKey(kp.private_key, private_key);
-}
+// inline void CreateRSAKeys(std::string *public_key, std::string *private_key) {
+//   asymm::Keys kp;
+//   asymm::GenerateKeyPair(&kp);
+//   asymm::EncodePublicKey(kp.public_key, public_key);
+//   asymm::EncodePrivateKey(kp.private_key, private_key);
+// }
 
 }  // unnamed namespace
 
