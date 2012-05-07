@@ -1205,8 +1205,8 @@ TEST_F(ServicesTest, BEH_Downlist) {
   boost::mutex mutex;
   boost::condition_variable cond_var;
   routing_table_->ping_down_contact()->connect(
-      std::bind(&ServicesTest::PingDownlistCallback, this, args::_1,
-                &pinged_node_ids, &mutex, &cond_var));
+      boost::bind(&ServicesTest::PingDownlistCallback, this, _1,
+                  &pinged_node_ids, &mutex, &cond_var));
   {
     boost::mutex::scoped_lock lock(mutex);
     service_->Downlist(info_, downlist_notification, &time_out);
