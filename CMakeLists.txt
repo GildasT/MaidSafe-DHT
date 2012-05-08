@@ -98,20 +98,21 @@ set(HEADER_FILES_DHT_TESTS_FUNCTIONALS "${PROJECT_SOURCE_DIR}/src/maidsafe/dht/t
 # Define MaidSafe libraries and executables                                                       #
 ###################################################################################################
 ms_add_static_library(dht ${ALL_FILES_DHT_DIR})
-ms_add_executable(TESTkademlia Tests ${ALL_FILES_DHT_TESTS_DIR})
-ms_add_executable(TESTnode_functional Tests ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
-ms_add_executable(TESTnode_impl_functional Tests ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_IMPL} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
-ms_add_executable(TESTnode_churn Tests ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_CHURN} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
-ms_add_executable(KademliaDemo Demo ${ALL_FILES_DEMO_DIR})
-ms_add_executable(Benchmark Benchmark ${ALL_FILES_BENCHMARK_DIR})
+ms_add_executable(TESTkademlia "Tests/DHT" ${ALL_FILES_DHT_TESTS_DIR})
+ms_add_executable(TESTnode_functional "Tests/DHT" ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
+ms_add_executable(TESTnode_impl_functional "Tests/DHT" ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_IMPL} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
+ms_add_executable(TESTnode_churn "Tests/DHT" ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL_NODE_CHURN} ${HEADER_FILES_DHT_TESTS_FUNCTIONALS})
+ms_add_executable(KademliaDemo Demos ${ALL_FILES_DEMO_DIR})
+ms_add_executable(KademliaBenchmark Benchmarks ${ALL_FILES_BENCHMARK_DIR})
 
 # This target allows maidsafe_dht to be installed without building all project targets
 if(MSVC)
-  add_custom_target(install_fast ${CMAKE_COMMAND} -DBUILD_TYPE=$<CONFIGURATION> -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
+  add_custom_target(install_dht_fast ${CMAKE_COMMAND} -DBUILD_TYPE=$<CONFIGURATION> -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
 else()
-  add_custom_target(install_fast ${CMAKE_COMMAND} -DBUILD_TYPE=${CMAKE_BUILD_TYPE} -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
+  add_custom_target(install_dht_fast ${CMAKE_COMMAND} -DBUILD_TYPE=${CMAKE_BUILD_TYPE} -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
 endif()
-add_dependencies(install_fast maidsafe_dht)
+add_dependencies(install_dht_fast maidsafe_dht)
+set_target_properties(install_dht_fast PROPERTIES FOLDER "MaidSafe")
 
 
 target_link_libraries(maidsafe_dht maidsafe_transport)
@@ -120,7 +121,7 @@ target_link_libraries(TESTnode_functional maidsafe_dht)
 target_link_libraries(TESTnode_impl_functional maidsafe_dht)
 target_link_libraries(TESTnode_churn maidsafe_dht)
 target_link_libraries(KademliaDemo maidsafe_dht boost_program_options-static)
-target_link_libraries(Benchmark maidsafe_dht boost_program_options-static)
+target_link_libraries(KademliaBenchmark maidsafe_dht boost_program_options-static)
 rename_outdated_built_exes()
 
 
