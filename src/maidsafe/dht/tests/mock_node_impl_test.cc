@@ -195,6 +195,9 @@ class MockRpcs : public Rpcs<TransportType>, public CreateContactAndNodeId {
                                  PrivateKeyPtr private_key,
                                  const Contact &peer,
                                  RpcFindNodesFunctor callback));
+  MOCK_METHOD3_T(Downlist, void(const std::vector<NodeId> &node_ids,
+                                 SecurifierPtr securifier,
+                                 const Contact &peer));
   MOCK_METHOD7_T(Store, void(const Key &key,
                              const std::string &value,
                              const std::string &signature,
@@ -273,6 +276,25 @@ class MockRpcs : public Rpcs<TransportType>, public CreateContactAndNodeId {
       Rpcs<TransportType>::asio_service_.post(std::bind(
           &MockRpcs<TransportType>::FindNodeNoResponseThread, this,
           callback, response_list));
+    }
+  }
+
+  void SendDownlistMock(const std::vector<NodeId> &node_ids,
+                        const Contact &peer,
+                        const std::map<Contact, std::vector<Contact>>
+                            *expected_provider_list,
+                        size_t* downlist_call_count) {
+    (*downlist_call_count)++;
+    auto it(expected_provider_list->find(peer));
+    if (it != expected_provider_list->end()) {
+      ASSERT_EQ((*it).second.size(), node_ids.size());
+      for (auto itr((*it).second.begin()); itr != (*it).second.end(); ++itr)
+        ASSERT_NE(node_ids.end(),
+                  std::find(node_ids.begin(),
+                            node_ids.end(),
+                            (*itr).node_id()));
+    } else {
+      DLOG(INFO) << "Invalid Provider Received";
     }
   }
 
@@ -2445,6 +2467,77 @@ TEST_F(MockNodeImplTest, BEH_InsertCloseContacts) {
               std::find((*it).second.providers.begin(),
                         (*it).second.providers.end(),
                         (*peer_itr).first));
+}
+
+TEST_F(MockNodeImplTest, BEH_SendDownlist) {
+  std::map<Contact, std::vector<Contact>> expected_provider_list;
+  size_t downlist_call_count(0);
+  size_t expected_providers_count(0);
+  // Mock Setup
+  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
+      new MockRpcs<transport::TcpTransport>(asio_service_, securifier_));
+  new_rpcs->set_node_id(node_id_);
+  SetRpcs<transport::TcpTransport>(new_rpcs);
+  EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::WithArgs<0, 2>(testing::Invoke(
+          std::bind(&MockRpcs<transport::TcpTransport>::SendDownlistMock,
+                    new_rpcs.get(),
+                    arg::_1,
+                    arg::_2,
+                    &expected_provider_list,
+                    &downlist_call_count))));
+  Downlist down_list(std::bind(static_cast<bool(*)(const Contact&,  // NOLINT (Viv)
+                     const Contact&, const NodeId&)>(&CloserToTarget),
+                     arg::_1, arg::_2, node_id_));
+
+// Empty Down-List To Verify DownList not being Called
+  ASSERT_EQ(0, expected_providers_count);
+  node_->SendDownlist(down_list);
+  ASSERT_EQ(expected_providers_count, downlist_call_count);
+
+// Random Composition of down_list
+  uint16_t num_providers(maidsafe::RandomUint32() % 5 + node_->k_);
+  uint16_t num_down_contacts(maidsafe::RandomUint32() % 15 + node_->k_);
+
+  std::set<Contact> down_contacts;
+  while (down_contacts.size() < num_down_contacts)
+    down_contacts.insert(
+      ComposeContact(NodeId(GenerateRandomId(node_id_, 490)), 5600));
+  ASSERT_EQ(num_down_contacts, down_contacts.size());
+
+  std::set<Contact> providers;
+  while (providers.size() < num_providers)
+    providers.insert(
+      ComposeContact(NodeId(GenerateRandomId(node_id_, 490)), 5600));
+  ASSERT_EQ(num_providers, providers.size());
+
+  for (auto it(down_contacts.begin()); it != down_contacts.end(); ++it)
+    down_list.insert(std::make_pair(*it, ContactInfo()));
+  ASSERT_EQ(num_down_contacts, down_list.size());
+
+  for (auto itr(down_list.begin()); itr != down_list.end(); ++itr) {
+    uint16_t num_providers_for_contact(
+        maidsafe::RandomUint32() % num_providers + node_->k_);
+    for (size_t i = 0; i < num_providers_for_contact; ++i) {
+      auto provider_itr(providers.begin());
+      std::advance(provider_itr, maidsafe::RandomUint32() % providers.size());
+      (*itr).second.providers.push_back(*provider_itr);
+      auto expected_provider_list_itr(
+          expected_provider_list.find(*provider_itr));
+      if (expected_provider_list_itr != expected_provider_list.end()) {
+        (*expected_provider_list_itr).second.push_back((*itr).first);
+      } else {
+        expected_provider_list.insert(
+            std::make_pair(*provider_itr,
+                           std::vector<Contact>(1, (*itr).first)));
+        ++expected_providers_count;
+      }
+    }
+  }
+  ASSERT_EQ(expected_providers_count, expected_provider_list.size());
+
+  node_->SendDownlist(down_list);
+  ASSERT_EQ(expected_providers_count, downlist_call_count);
 }
 
 }  // namespace test
