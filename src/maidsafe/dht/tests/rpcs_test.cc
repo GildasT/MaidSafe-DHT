@@ -108,12 +108,11 @@ void TestFindValueCallback(
 }
 
 template <typename T>
-class RpcsTest : public CreateContactAndNodeId, public testing::Test {
+class RpcsTest : public RoutingTableManipulator, public testing::Test {
  public:
   RpcsTest()
-      : CreateContactAndNodeId(g_kKademliaK),
-        node_id_(NodeId::kRandomId),
-        routing_table_(new RoutingTable(node_id_, g_kKademliaK)),
+      : RoutingTableManipulator(g_kKademliaK),
+        node_id_(kHolderId()),
         data_store_(new DataStore(bptime::seconds(3600))),
         asio_service_(),
         local_asio_(),
@@ -136,7 +135,7 @@ class RpcsTest : public CreateContactAndNodeId, public testing::Test {
 
   virtual void SetUp() {
     // rpcs setup
-    NodeId rpcs_node_id = GenerateRandomId(node_id_, 502);
+    NodeId rpcs_node_id = GenerateUniqueRandomId(10);
     asymm::Keys key_pair;
     key_pair.identity = rpcs_node_id.String();
     key_pair.private_key = sender_crypto_key_id_.private_key;
@@ -169,7 +168,7 @@ class RpcsTest : public CreateContactAndNodeId, public testing::Test {
     service_key_pair.public_key = receiver_crypto_key_id_.public_key;
     service_key_pair.private_key = receiver_crypto_key_id_.private_key;
     service_key_pair_.reset(new asymm::Keys(service_key_pair));
-    NodeId service_node_id = GenerateRandomId(node_id_, 503);
+    NodeId service_node_id = GenerateUniqueRandomId(9);
     service_contact_ = ComposeContactWithKey(service_node_id,
                                              transport_->listening_port(),
                                              receiver_crypto_key_id_);
@@ -321,7 +320,6 @@ class RpcsTest : public CreateContactAndNodeId, public testing::Test {
   typedef std::shared_ptr<boost::asio::io_service::work> WorkPtr;
 
   NodeId node_id_;
-  std::shared_ptr<RoutingTable> routing_table_;
   std::shared_ptr<DataStore> data_store_;
   KeyPairPtr service_key_pair_;
   std::shared_ptr<Service> service_;
@@ -402,6 +400,9 @@ TYPED_TEST_P(RpcsTest, FUNC_FindNodesPopulatedRTnoNode) {
   int response_code(kGeneralError);
   std::vector<Contact> contact_list;
   this->PopulateRoutingTable(2*g_kKademliaK);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   Key key = this->service_contact_.node_id();
 
   this->rpcs_->FindNodes(key, g_kKademliaK,
@@ -439,6 +440,9 @@ TYPED_TEST_P(RpcsTest, FUNC_FindNodesPopulatedRTwithNode) {
   bool done(false);
   int response_code(kGeneralError);
   this->PopulateRoutingTable(2*g_kKademliaK-1);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   std::vector<Contact> contact_list;
   AddContact(this->routing_table_, this->service_contact_, this->rank_info_);
   Key key = this->service_contact_.node_id();
@@ -478,6 +482,9 @@ TYPED_TEST_P(RpcsTest, FUNC_FindNodesVariableNodesRequest) {
   bool done(false);
   int response_code(kGeneralError);
   this->PopulateRoutingTable(2*g_kKademliaK-1);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   std::vector<Contact> contact_list;
   AddContact(this->routing_table_, this->service_contact_, this->rank_info_);
   Key key = this->service_contact_.node_id();
@@ -517,6 +524,9 @@ TYPED_TEST_P(RpcsTest, FUNC_FindValueVariableNodesRequest) {
   bool done(false);
   int response_code(kGeneralError);
   this->PopulateRoutingTable(2*g_kKademliaK);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   Key key = this->rpcs_contact_.node_id();
   KeyValueSignature kvs = MakeKVS(this->sender_crypto_key_id_, 1024,
                                   key.String(), "");
@@ -566,6 +576,9 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindValue) {
   bool done(false);
   int response_code(kGeneralError);
   this->PopulateRoutingTable(2*g_kKademliaK);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   Key key = this->rpcs_contact_.node_id();
   KeyValueSignature kvs = MakeKVS(this->sender_crypto_key_id_, 1024,
                                   key.String(), "");
@@ -627,6 +640,9 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindAndDeleteValueXXXToBeRemoved) {
   bool done(false);
   int response_code(kGeneralError);
   this->PopulateRoutingTable(2*g_kKademliaK);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   Key key = this->rpcs_contact_.node_id();
   KeyValueSignature kvs = MakeKVS(this->sender_crypto_key_id_, 1024,
                                   key.String(), "");
@@ -719,6 +735,9 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindAndDeleteValueXXXToBeRemoved) {
 
 TYPED_TEST_P(RpcsTest, FUNC_StoreMalicious) {
   this->PopulateRoutingTable(2*g_kKademliaK);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   bool done(false);
   int response_code(kGeneralError);
   Key key = this->rpcs_contact_.node_id();
@@ -811,6 +830,9 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreMultipleRequest) {
 
 TYPED_TEST_P(RpcsTest, FUNC_StoreRefresh) {
   this->PopulateRoutingTable(2*g_kKademliaK);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   bool done(false);
   int response_code(kGeneralError);
   std::vector<ValueAndSignature> return_values_and_signatures;
@@ -916,7 +938,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMultipleRequests) {
   std::vector<RequestAndSignature> req_sig_vector;
   for (size_t i = 0; i < 10; ++i) {
     // Adding key value from different contact in the receiver's datastore
-    NodeId sender_id = this->GenerateUniqueRandomId(this->node_id_, 502);
+    NodeId sender_id = this->GenerateUniqueRandomId(10);
     kvs_vector.push_back(MakeKVS(this->sender_crypto_key_id_, 4096, "", ""));
     RequestAndSignature request_signature("", "");
     Contact sender = this->ComposeContactWithKey(sender_id, 5001,
@@ -964,6 +986,9 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMultipleRequests) {
 
 TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMalicious) {
   this->PopulateRoutingTable(2*g_kKademliaK);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   bool done(false);
   int response_code(kGeneralError);
   Key key = this->rpcs_contact_.node_id();
@@ -1037,6 +1062,9 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMalicious) {
 
 TYPED_TEST_P(RpcsTest, FUNC_Delete) {
   this->PopulateRoutingTable(2*g_kKademliaK);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   bool done(false);
   int response_code(-1);
   Key key = this->rpcs_contact_.node_id();
@@ -1208,10 +1236,13 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteMultipleRequest) {
 
 TYPED_TEST_P(RpcsTest, FUNC_DeleteRefresh) {
   this->PopulateRoutingTable(2*g_kKademliaK);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   bool done(false);
   int response_code(-1);
   // Adding key value from different contact in the receiver's datastore
-  NodeId sender_id = this->GenerateUniqueRandomId(this->node_id_, 502);
+  NodeId sender_id = this->GenerateUniqueRandomId(10);
   asymm::Keys crypto_key_data;
   asymm::GenerateKeyPair(&crypto_key_data);
   Contact sender = this->ComposeContactWithKey(sender_id, 5001,
@@ -1264,10 +1295,13 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefresh) {
 
 TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshStoredValue) {
   this->PopulateRoutingTable(2*g_kKademliaK);
+  routing_table_->GetAllContacts(&contacts_);
+  std::sort(contacts_.begin(), contacts_.end());
+
   bool done(false);
   int response_code(-1);
   // Adding key value from different contact in the receiver's datastore
-  NodeId sender_id = this->GenerateUniqueRandomId(this->node_id_, 502);
+  NodeId sender_id = this->GenerateUniqueRandomId(10);
   asymm::Keys crypto_key_data;
   asymm::GenerateKeyPair(&crypto_key_data);
   Contact sender = this->ComposeContactWithKey(sender_id, 5001,
@@ -1321,7 +1355,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshMalicious) {
   bool done(false);
   int response_code(-1);
   // Adding key value from different contact in the receiver's datastore
-  NodeId sender_id = this->GenerateUniqueRandomId(this->node_id_, 502);
+  NodeId sender_id = this->GenerateUniqueRandomId(10);
   asymm::Keys crypto_key_data;
   asymm::GenerateKeyPair(&crypto_key_data);
   KeyValueSignature kvs = MakeKVS(crypto_key_data, 4096, "", "");
@@ -1358,7 +1392,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshNonExistingKey) {
   bool done(false);
   int response_code(-1);
   // Creating Delete request
-  NodeId sender_id = this->GenerateUniqueRandomId(this->node_id_, 502);
+  NodeId sender_id = this->GenerateUniqueRandomId(10);
   asymm::Keys crypto_key_data;
   asymm::GenerateKeyPair(&crypto_key_data);
   KeyValueSignature kvs = MakeKVS(crypto_key_data, 4096, "", "");
@@ -1390,7 +1424,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshMultipleRequests) {
   std::vector<RequestAndSignature> req_sig_vector;
   for (size_t i = 0; i < 10; ++i) {
     // Adding key value from different contact in the receiver's datastore
-    NodeId sender_id = this->GenerateUniqueRandomId(this->node_id_, 502);
+    NodeId sender_id = this->GenerateUniqueRandomId(10);
     asymm::Keys crypto_key_data;
     asymm::GenerateKeyPair(&crypto_key_data);
     kvs_vector.push_back(MakeKVS(crypto_key_data, 4096, "", ""));
@@ -1478,11 +1512,11 @@ INSTANTIATE_TYPED_TEST_CASE_P(TheRpcTests, RpcsTest, TransportTypes);
 
 
 template <typename T>
-class RpcsMultiServerNodesTest : public CreateContactAndNodeId,
+class RpcsMultiServerNodesTest : public RoutingTableManipulator,
                                  public testing::Test {
  public:
   RpcsMultiServerNodesTest()
-      : CreateContactAndNodeId(g_kKademliaK),
+      : RoutingTableManipulator(g_kKademliaK),
         node_id_(NodeId::kRandomId),
         routing_table_(),
         data_store_(),
@@ -1503,10 +1537,9 @@ class RpcsMultiServerNodesTest : public CreateContactAndNodeId,
       asio_services_.push_back(std::shared_ptr<AsioService>(new AsioService));
       (*asio_services_.rbegin())->Start(1);
     }
-    const int kMinServerPositionOffset(kKeySizeBits - g_kRpcServersNo);
     for (int index = 0; index != g_kRpcServersNo; ++index) {
       NodeId service_node_id =
-          GenerateRandomId(node_id_, kMinServerPositionOffset + index);
+          GenerateUniqueRandomId(g_kRpcServersNo - index - 1);
       routing_table_.push_back(RoutingTablePtr(new RoutingTable(service_node_id,
                                                                 g_kKademliaK)));
       data_store_.push_back(DataStorePtr(
@@ -1537,10 +1570,8 @@ class RpcsMultiServerNodesTest : public CreateContactAndNodeId,
   virtual void SetUp() {
     // rpcs setup
     size_t port_start(RandomUint32() % 50000 + 1025);
-    const int kMinClientPositionOffset(kKeySizeBits - g_kRpcClientNo);
     for (int index = 0; index != g_kRpcClientNo; ++index) {
-      NodeId rpcs_node_id =
-          GenerateRandomId(node_id_, kMinClientPositionOffset + index);
+      NodeId rpcs_node_id = GenerateUniqueRandomId(g_kRpcClientNo - index - 1);
       asymm::Keys key_pair;
       key_pair.identity = rpcs_node_id.String();
       key_pair.private_key = senders_crypto_key_id3_[index].private_key;
@@ -1558,10 +1589,9 @@ class RpcsMultiServerNodesTest : public CreateContactAndNodeId,
       rpcs_[index]->set_contact(rpcs_contact_[index]);
     }
     // service setup
-    const int kMinServerPositionOffset(kKeySizeBits - g_kRpcServersNo);
     for (int index = 0; index != g_kRpcServersNo; ++index) {
       NodeId service_node_id =
-          GenerateRandomId(node_id_, kMinServerPositionOffset + index);
+          GenerateUniqueRandomId(g_kRpcServersNo - index - 1);
       service_contact_.push_back(
           ComposeContactWithKey(service_node_id,
               static_cast<Port>(port_start + g_kRpcClientNo + index),

@@ -168,24 +168,6 @@ void validate(boost::any& v, const std::vector<std::string>& values,
 
 int main(int argc, char **argv) {
   maidsafe::InitLogging(argv[0]);
-#ifndef __APPLE__
-  fs::path cur_path = fs::initial_path();
-  maidsafe::crash_report::ProjectInfo current_project("MaidSafe-DHT",
-                        boost::lexical_cast<std::string>(MAIDSAFE_DHT_VERSION));
-#ifdef WIN32
-  google_breakpad::ExceptionHandler exception_handler(cur_path.wstring(),
-                                        nullptr,
-                                        maidsafe::crash_report::DumpCallback,
-                                        &current_project,
-                                        true);
-#else
-  google_breakpad::ExceptionHandler exception_handler(cur_path.string(),
-                                        nullptr,
-                                        maidsafe::crash_report::DumpCallback,
-                                        &current_project,
-                                        true);
-#endif
-#endif
   try {
     PortRange port_range(8000, 65535);
     std::string logfile, bootstrap_file("bootstrap_contacts");

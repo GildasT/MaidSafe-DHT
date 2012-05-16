@@ -50,6 +50,8 @@ namespace dht {
 
 namespace test {
 
+extern const boost::posix_time::milliseconds kNetworkDelay;
+
 class AsymGetPublicKeyAndValidation {
  public:
   AsymGetPublicKeyAndValidation(const asymm::Identity &public_key_id,
@@ -73,31 +75,40 @@ class AsymGetPublicKeyAndValidation {
 
 typedef std::shared_ptr<AsymGetPublicKeyAndValidation> AsymGPKPtr;
 
-const boost::posix_time::milliseconds kNetworkDelay(200);
-
-class CreateContactAndNodeId {
+class RoutingTableManipulator {
  public:
-  explicit CreateContactAndNodeId(uint16_t k);
-  virtual ~CreateContactAndNodeId() {}
-  NodeId GenerateUniqueRandomId(const NodeId &holder, const int &pos);
-  Contact GenerateUniqueContact(const NodeId &holder,
-                                const int &pos,
-                                const NodeId &target,
-                                RoutingTableContactsContainer *generated_nodes);
-  NodeId GenerateRandomId(const NodeId &holder, const int &pos);
+  explicit RoutingTableManipulator(uint16_t k);
+  virtual ~RoutingTableManipulator() {}
+
+ protected:
+  // Generates a random ID which has not previously been created via this class
+  // since the last call to Reset().  If common_leading_bits is >= 0, then the
+  // generated ID will have that number of leading bits in common with target's.
+  NodeId GenerateUniqueRandomId(int common_leading_bits,
+                                const NodeId &target_id = NodeId(kZeroId));
   Contact ComposeContact(const NodeId &node_id, const Port &port);
   Contact ComposeContactWithKey(const NodeId &node_id,
                                 const Port &port,
                                 const asymm::Keys &crypto_key);
-  void PopulateContactsVector(const int &count,
-                              const int &pos,
-                              std::vector<Contact> *contacts);
-  void set_node_id(NodeId node_id) { node_id_ = node_id; }
- protected:
+  // Populates the routing table with "count" contacts.  If common_leading_bits
+  // is >= 0, then all contacts added will have that number of leading bits in
+  // common with holder's ID.
+  void PopulateRoutingTable(int count, int common_leading_bits = -1);
+  void GetContact(const NodeId &node_id, Contact *contact);
+  std::vector<RoutingTableContact> GetContacts() const;
+  bool GetRoutingTableContact(
+      const NodeId &node_id,
+      RoutingTableContact &routing_table_contact) const;
+  RoutingTable::UnvalidatedContacts GetUnvalidatedContacts() const;
+  NodeId kHolderId() const { return routing_table_->kThisId_; }
+  int own_bucket_index() { return routing_table_->own_bucket_index_; }
+  void Reset();
+
   Contact contact_;
-  NodeId node_id_;
-  std::vector<NodeId> generated_ids_;
   std::shared_ptr<RoutingTable> routing_table_;
+
+ private:
+  std::vector<NodeId> generated_ids_;
 };
 
 KeyValueSignature MakeKVS(const asymm::Keys &rsa_key_pair,

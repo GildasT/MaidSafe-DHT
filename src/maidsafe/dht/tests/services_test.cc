@@ -99,14 +99,12 @@ class MockTransportServiceTest : public transport::Transport {
   }
 };
 
-class ServicesTest: public CreateContactAndNodeId, public testing::Test {
+class ServicesTest: public RoutingTableManipulator, public testing::Test {
  public:
   ServicesTest()
-      : CreateContactAndNodeId(g_kKademliaK),
-        contact_(),
-        node_id_(NodeId::kRandomId),
+      : RoutingTableManipulator(g_kKademliaK),
+        node_id_(kHolderId()),
         data_store_(new DataStore(bptime::seconds(3600))),
-        routing_table_(new RoutingTable(node_id_, g_kKademliaK)),
         key_pair_(new asymm::Keys()),
         info_(),
         rank_info_(),
@@ -129,7 +127,7 @@ class ServicesTest: public CreateContactAndNodeId, public testing::Test {
   }
 
   void Clear() {
-    routing_table_->Clear();
+    Reset();
     data_store_->key_value_index_->clear();
     num_of_pings_ = 0;
   }
@@ -143,7 +141,6 @@ class ServicesTest: public CreateContactAndNodeId, public testing::Test {
   }
 
   void CheckServiceConstructAttributes(const Service& service, uint16_t k) {
-    EXPECT_EQ(0U, service.routing_table_->Size());
     EXPECT_EQ(0U, service.datastore_->key_value_index_->size());
     EXPECT_FALSE(service.node_joined_);
     EXPECT_EQ(k, service.k_);
@@ -257,27 +254,12 @@ class ServicesTest: public CreateContactAndNodeId, public testing::Test {
     }
   }
 
-  void PopulateRoutingTable(uint16_t count) {
-    for (int num_contact = 0; num_contact < count; ++num_contact) {
-      NodeId contact_id(NodeId::kRandomId);
-      Contact contact = ComposeContact(contact_id, 5000);
-      AddContact(routing_table_, contact, rank_info_);
-    }
-  }
-  void PopulateRoutingTable(uint16_t count, uint16_t pos) {
-    for (int num_contact = 0; num_contact < count; ++num_contact) {
-      NodeId contact_id = GenerateUniqueRandomId(node_id_, pos);
-      Contact contact = ComposeContact(contact_id, 5000);
-      AddContact(routing_table_, contact, rank_info_);
-    }
-  }
-
   size_t GetRoutingTableSize() const {
-    return routing_table_->Size();
+    return GetContacts().size();
   }
 
   size_t CountUnValidatedContacts() const {
-    return routing_table_->unvalidated_contacts_.size();
+    return GetUnvalidatedContacts().size();
   }
 
   size_t GetDataStoreSize() const {
@@ -320,10 +302,8 @@ class ServicesTest: public CreateContactAndNodeId, public testing::Test {
   }
 
 
-  Contact contact_;
   NodeId node_id_;
   std::shared_ptr<DataStore> data_store_;
-  std::shared_ptr<RoutingTable> routing_table_;
   KeyPairPtr key_pair_;
   transport::Info info_;
   RankInfoPtr rank_info_;
@@ -345,7 +325,7 @@ TEST_F(ServicesTest, BEH_Constructor) {
 TEST_F(ServicesTest, BEH_Store) {
   asymm::Keys crypto_key_data;
   asymm::GenerateKeyPair(&crypto_key_data);
-  NodeId sender_id = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id = GenerateUniqueRandomId(10);
   Contact sender = ComposeContactWithKey(sender_id, 5001, crypto_key_data);
 
   KeyValueSignature kvs = MakeKVS(crypto_key_data, 1024, "", "");
@@ -468,7 +448,7 @@ TEST_F(ServicesTest, BEH_Store) {
 TEST_F(ServicesTest, BEH_Delete) {
   asymm::Keys crypto_key_data;
   asymm::GenerateKeyPair(&crypto_key_data);
-  NodeId sender_id = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id = GenerateUniqueRandomId(10);
   Contact sender = ComposeContactWithKey(sender_id, 5001, crypto_key_data);
 
   KeyValueSignature kvs = MakeKVS(crypto_key_data, 1024, "", "");
@@ -588,7 +568,7 @@ TEST_F(ServicesTest, BEH_Delete) {
 TEST_F(ServicesTest, FUNC_StoreRefresh) {
   asymm::Keys crypto_key_data;
   asymm::GenerateKeyPair(&crypto_key_data);
-  NodeId sender_id = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id = GenerateUniqueRandomId(10);
   Contact sender = ComposeContactWithKey(sender_id, 5001, crypto_key_data);
 
   KeyValueSignature kvs = MakeKVS(crypto_key_data, 1024, "", "");
@@ -603,7 +583,7 @@ TEST_F(ServicesTest, FUNC_StoreRefresh) {
 
   asymm::Keys new_crypto_key_id;
   asymm::GenerateKeyPair(&new_crypto_key_id);
-  NodeId new_sender_id = GenerateUniqueRandomId(node_id_, 502);
+  NodeId new_sender_id = GenerateUniqueRandomId(10);
   Contact new_sender = ComposeContactWithKey(new_sender_id, 5001,
                                              new_crypto_key_id);
   protobuf::StoreRefreshRequest store_refresh_request;
@@ -711,7 +691,7 @@ TEST_F(ServicesTest, FUNC_StoreRefresh) {
 TEST_F(ServicesTest, FUNC_DeleteRefresh) {
   asymm::Keys crypto_key_data;
   asymm::GenerateKeyPair(&crypto_key_data);
-  NodeId sender_id = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id = GenerateUniqueRandomId(10);
   Contact sender = ComposeContactWithKey(sender_id, 5001, crypto_key_data);
 
   KeyValueSignature kvs = MakeKVS(crypto_key_data, 1024, "", "");
@@ -730,7 +710,7 @@ TEST_F(ServicesTest, FUNC_DeleteRefresh) {
 
   asymm::Keys new_crypto_key_id;
   asymm::GenerateKeyPair(&new_crypto_key_id);
-  NodeId new_sender_id = GenerateUniqueRandomId(node_id_, 502);
+  NodeId new_sender_id = GenerateUniqueRandomId(10);
   Contact new_sender = ComposeContactWithKey(new_sender_id, 5001,
                                               new_crypto_key_id);
   protobuf::DeleteRefreshRequest delete_refresh_request;
@@ -893,9 +873,9 @@ TEST_F(ServicesTest, FUNC_DeleteRefresh) {
 }
 
 TEST_F(ServicesTest, BEH_FindNodes) {
-  NodeId target_id = GenerateUniqueRandomId(node_id_, 503);
+  NodeId target_id = GenerateUniqueRandomId(503);
   Contact target = ComposeContact(target_id, 5001);
-  NodeId sender_id = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id = GenerateUniqueRandomId(10);
   Contact sender = ComposeContact(sender_id, 5001);
 
   protobuf::FindNodesRequest find_nodes_req;
@@ -935,8 +915,8 @@ TEST_F(ServicesTest, BEH_FindNodes) {
   {
     // try to find the target from a 2*k filled routing table
     // (not containing the target)
-    PopulateRoutingTable(g_kKademliaK, 500);
-    PopulateRoutingTable(g_kKademliaK, 501);
+    PopulateRoutingTable(g_kKademliaK, 12);
+    PopulateRoutingTable(g_kKademliaK, 11);
     EXPECT_EQ(2 * g_kKademliaK, GetRoutingTableSize());
 
     protobuf::FindNodesResponse find_nodes_rsp;
@@ -950,8 +930,8 @@ TEST_F(ServicesTest, BEH_FindNodes) {
   {
     // try to find the target from a 2*k filled routing table
     // (containing the target)
-    PopulateRoutingTable(g_kKademliaK, 500);
-    PopulateRoutingTable(g_kKademliaK - 1, 501);
+    PopulateRoutingTable(g_kKademliaK, 12);
+    PopulateRoutingTable(g_kKademliaK - 1, 11);
     AddContact(routing_table_, target, rank_info_);
     EXPECT_EQ(2 * g_kKademliaK, GetRoutingTableSize());
 
@@ -974,8 +954,8 @@ TEST_F(ServicesTest, BEH_FindNodes) {
   {
     // try to find the target from a 2*k+1 filled routing table
     // (containing the sender, but not containing the target)
-    PopulateRoutingTable(g_kKademliaK, 500);
-    PopulateRoutingTable(g_kKademliaK, 501);
+    PopulateRoutingTable(g_kKademliaK, 12);
+    PopulateRoutingTable(g_kKademliaK, 11);
     AddContact(routing_table_, sender, rank_info_);
     EXPECT_EQ(2 * g_kKademliaK + 1, GetRoutingTableSize());
 
@@ -992,8 +972,8 @@ TEST_F(ServicesTest, BEH_FindNodes) {
     // try to find the target from a 2*k filled routing table
     // where num_nodes_requested < g_kKademliaK, it should return
     // g_kKademliaK contacts
-    PopulateRoutingTable(g_kKademliaK, 500);
-    PopulateRoutingTable(g_kKademliaK, 501);
+    PopulateRoutingTable(g_kKademliaK, 12);
+    PopulateRoutingTable(g_kKademliaK, 11);
     EXPECT_EQ(2 * g_kKademliaK, GetRoutingTableSize());
 
     protobuf::FindNodesResponse find_nodes_rsp;
@@ -1008,8 +988,8 @@ TEST_F(ServicesTest, BEH_FindNodes) {
     // try to find the target from a 2*k filled routing table
     // where num_nodes_requested > g_kKademliaK, it should return
     // num_nodes_requested contacts
-    PopulateRoutingTable(g_kKademliaK, 500);
-    PopulateRoutingTable(g_kKademliaK, 501);
+    PopulateRoutingTable(g_kKademliaK, 12);
+    PopulateRoutingTable(g_kKademliaK, 11);
     EXPECT_EQ(2 * g_kKademliaK, GetRoutingTableSize());
 
     protobuf::FindNodesResponse find_nodes_rsp;
@@ -1022,9 +1002,9 @@ TEST_F(ServicesTest, BEH_FindNodes) {
 }
 
 TEST_F(ServicesTest, FUNC_FindValue) {
-  NodeId target_id = GenerateUniqueRandomId(node_id_, 503);
+  NodeId target_id = GenerateUniqueRandomId(503);
   Contact target = ComposeContact(target_id, 5001);
-  NodeId sender_id = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id = GenerateUniqueRandomId(10);
   Contact sender = ComposeContact(sender_id, 5001);
 
   protobuf::FindValueRequest find_value_req;
@@ -1053,8 +1033,8 @@ TEST_F(ServicesTest, FUNC_FindValue) {
     // Search in empty datastore
     // but with 2*k+1 populated routing table (containing the key)
     // Not a cached copy holder
-    PopulateRoutingTable(g_kKademliaK, 500);
-    PopulateRoutingTable(g_kKademliaK, 501);
+    PopulateRoutingTable(g_kKademliaK, 12);
+    PopulateRoutingTable(g_kKademliaK, 11);
     AddContact(routing_table_, target, rank_info_);
 
     protobuf::FindValueResponse find_value_rsp;
@@ -1079,8 +1059,8 @@ TEST_F(ServicesTest, FUNC_FindValue) {
     // Not a cached copy holder
     // num_nodes_requested < g_kKademliaK.
     // The response should contain g_kKademliaK contacts.
-    PopulateRoutingTable(g_kKademliaK, 500);
-    PopulateRoutingTable(g_kKademliaK, 501);
+    PopulateRoutingTable(g_kKademliaK, 12);
+    PopulateRoutingTable(g_kKademliaK, 11);
 
     find_value_req.set_num_nodes_requested(g_kKademliaK/2);
     protobuf::FindValueResponse find_value_rsp;
@@ -1097,8 +1077,8 @@ TEST_F(ServicesTest, FUNC_FindValue) {
     // Not a cached copy holder
     // num_nodes_requested > g_kKademliaK.
     // The response should contain num_nodes_requested contacts.
-    PopulateRoutingTable(g_kKademliaK, 500);
-    PopulateRoutingTable(g_kKademliaK, 501);
+    PopulateRoutingTable(g_kKademliaK, 12);
+    PopulateRoutingTable(g_kKademliaK, 11);
 
     find_value_req.set_num_nodes_requested(g_kKademliaK*3/2);
     protobuf::FindValueResponse find_value_rsp;
@@ -1204,7 +1184,7 @@ TEST_F(ServicesTest, BEH_Downlist) {
 
   boost::mutex mutex;
   boost::condition_variable cond_var;
-  routing_table_->ping_down_contact()->connect(
+  routing_table_->ping_down_contact().connect(
       std::bind(&ServicesTest::PingDownlistCallback, this, args::_1,
                 &pinged_node_ids, &mutex, &cond_var));
   {
@@ -1280,9 +1260,9 @@ TEST_F(ServicesTest, BEH_Ping) {
 }
 
 TEST_F(ServicesTest, FUNC_MultipleStoreRequests) {
-  NodeId sender_id_1 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_2 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_3 = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id_1 = GenerateUniqueRandomId(10);
+  NodeId sender_id_2 = GenerateUniqueRandomId(10);
+  NodeId sender_id_3 = GenerateUniqueRandomId(10);
 
   asymm::Keys crypto_key_data_1;
   asymm::Keys crypto_key_data_2;
@@ -1374,9 +1354,9 @@ TEST_F(ServicesTest, FUNC_MultipleStoreRequests) {
 }
 
 TEST_F(ServicesTest, FUNC_MultipleDeleteRequests) {
-  NodeId sender_id_1 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_2 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_3 = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id_1 = GenerateUniqueRandomId(10);
+  NodeId sender_id_2 = GenerateUniqueRandomId(10);
+  NodeId sender_id_3 = GenerateUniqueRandomId(10);
 
   asymm::Keys crypto_key_data_1;
   asymm::Keys crypto_key_data_2;
@@ -1460,9 +1440,9 @@ TEST_F(ServicesTest, FUNC_MultipleDeleteRequests) {
 }
 
 TEST_F(ServicesTest, FUNC_MultipleStoreRefreshRequests) {
-  NodeId sender_id_1 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_2 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_3 = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id_1 = GenerateUniqueRandomId(10);
+  NodeId sender_id_2 = GenerateUniqueRandomId(10);
+  NodeId sender_id_3 = GenerateUniqueRandomId(10);
 
   asymm::Keys crypto_key_data_1;
   asymm::Keys crypto_key_data_2;
@@ -1631,9 +1611,9 @@ TEST_F(ServicesTest, FUNC_MultipleStoreRefreshRequests) {
 }
 
 TEST_F(ServicesTest, FUNC_MultipleDeleteRefreshRequests) {
-  NodeId sender_id_1 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_2 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_3 = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id_1 = GenerateUniqueRandomId(10);
+  NodeId sender_id_2 = GenerateUniqueRandomId(10);
+  NodeId sender_id_3 = GenerateUniqueRandomId(10);
 
   asymm::Keys crypto_key_data_1;
   asymm::Keys crypto_key_data_2;
@@ -1767,10 +1747,10 @@ TEST_F(ServicesTest, FUNC_MultipleDeleteRefreshRequests) {
 TEST_F(ServicesTest, FUNC_MultipleThreads) {
   const size_t kNumberOfThreads(8);
   // Preparing data
-  NodeId sender_id_1 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_2 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_3 = GenerateUniqueRandomId(node_id_, 502);
-  NodeId sender_id_4 = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id_1 = GenerateUniqueRandomId(10);
+  NodeId sender_id_2 = GenerateUniqueRandomId(10);
+  NodeId sender_id_3 = GenerateUniqueRandomId(10);
+  NodeId sender_id_4 = GenerateUniqueRandomId(10);
 
   asymm::Keys crypto_key_data_1;
   asymm::Keys crypto_key_data_2;
@@ -1910,7 +1890,7 @@ TEST_F(ServicesTest, BEH_SignalConnection) {
   // Data
   asymm::Keys crypto_key_data;
   asymm::GenerateKeyPair(&crypto_key_data);
-  NodeId sender_id = GenerateUniqueRandomId(node_id_, 502);
+  NodeId sender_id = GenerateUniqueRandomId(10);
   Contact sender = ComposeContactWithKey(sender_id, 5001, crypto_key_data);
   KeyValueSignature kvs = MakeKVS(crypto_key_data, 1024, "", "");
 

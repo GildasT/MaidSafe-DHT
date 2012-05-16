@@ -171,7 +171,7 @@ IF(NOT APPLE)
 TARGET_LINK_LIBRARIES(maidsafe_dht_static
                         maidsafe_transport_static
                         maidsafe_common_static
-                        breakpad_static
+#                         breakpad_static
                         boost_date_time
                         boost_regex)
 ELSE()

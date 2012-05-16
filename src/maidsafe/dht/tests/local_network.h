@@ -120,6 +120,7 @@ template <typename NodeType>
 void LocalNetwork<NodeType>::TearDown() {
   for (auto it(node_containers_.begin()); it != node_containers_.end(); ++it)
     (*it)->Stop(nullptr);
+  test_root_.reset();
 }
 
 }   //  namespace test

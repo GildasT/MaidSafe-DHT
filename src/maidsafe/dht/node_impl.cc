@@ -307,7 +307,7 @@ OrderedContacts NodeImpl::GetClosestContactsLocally(
     const Key &key,
     const uint16_t &total_contacts) {
   std::vector<Contact> close_nodes, excludes;
-  routing_table_->GetCloseContacts(key, total_contacts, excludes, &close_nodes);
+  routing_table_->GetCloseContacts(key, total_contacts, excludes, close_nodes);
   OrderedContacts close_contacts(CreateOrderedContacts(close_nodes.begin(),
                                                        close_nodes.end(), key));
   // This node's ID will not be held in the routing table, so add it now.  The
@@ -488,7 +488,7 @@ void NodeImpl::GetContact(const NodeId &node_id, GetContactFunctor callback) {
   }
 
   std::vector<Contact> close_nodes, excludes;
-  routing_table_->GetCloseContacts(node_id, k_, excludes, &close_nodes);
+  routing_table_->GetCloseContacts(node_id, k_, excludes, close_nodes);
   OrderedContacts close_contacts(CreateOrderedContacts(close_nodes.begin(),
                                                        close_nodes.end(),
                                                        node_id));
@@ -568,9 +568,6 @@ void NodeImpl::PingCallback(RankInfoPtr rank_info,
 }
 
 void NodeImpl::SetLastSeenToNow(const Contact &contact) {
-  Contact result;
-  if (routing_table_->GetContact(contact.node_id(), &result) != kSuccess)
-    return;
   // If the contact exists in the routing table, adding it again will set its
   // last_seen to now.
   routing_table_->AddContact(contact, RankInfoPtr());
@@ -589,6 +586,8 @@ RankInfoPtr NodeImpl::GetLocalRankInfo(const Contact &contact) const {
 }
 
 void NodeImpl::GetAllContacts(std::vector<Contact> *contacts) {
+  if (!contacts)
+    return;
   routing_table_->GetAllContacts(contacts);
 }
 
@@ -790,7 +789,7 @@ void NodeImpl::IterativeFindCallback(
     while (downlist_itr != lookup_args->downlist.end())
       excludes.push_back((*downlist_itr++).first);
     routing_table_->GetCloseContacts(lookup_args->kTarget, k_, excludes,
-                                     &close_nodes);
+                                     close_nodes);
     if (!close_nodes.empty()) {
       OrderedContacts close_contacts(
           CreateOrderedContacts(close_nodes.begin(), close_nodes.end(),
@@ -1568,7 +1567,7 @@ void NodeImpl::PingOldestContactCallback(Contact oldest_contact,
 void NodeImpl::ConnectPingOldestContact() {
   if (ping_oldest_contact_ == boost::signals2::connection()) {
     ping_oldest_contact_ =
-        routing_table_->ping_oldest_contact()->connect(
+        routing_table_->ping_oldest_contact().connect(
             std::bind(&NodeImpl::PingOldestContact, this, args::_1, args::_2,
                       args::_3));
   }
@@ -1592,7 +1591,7 @@ void NodeImpl::ValidateContactCallback(
 
 void NodeImpl::ConnectValidateContact() {
   if (validate_contact_ == boost::signals2::connection()) {
-    validate_contact_ = routing_table_->validate_contact()->connect(
+    validate_contact_ = routing_table_->validate_contact().connect(
         std::bind(&NodeImpl::ValidateContact, this, args::_1));
   }
 }
@@ -1621,7 +1620,7 @@ void NodeImpl::PingDownContactCallback(Contact down_contact,
 
 void NodeImpl::ConnectPingDownContact() {
   if (ping_down_contact_ == boost::signals2::connection()) {
-    ping_down_contact_ = routing_table_->ping_down_contact()->connect(
+    ping_down_contact_ = routing_table_->ping_down_contact().connect(
         std::bind(&NodeImpl::PingDownContact, this, args::_1));
   }
 }
