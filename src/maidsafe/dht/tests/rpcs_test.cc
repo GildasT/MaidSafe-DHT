@@ -348,8 +348,10 @@ TYPED_TEST_P(RpcsTest, FUNC_PingNoTarget) {
   bool done(false);
   int response_code(kGeneralError);
 
-  this->rpcs_->Ping(GetPrivateKeyPtr(this->rpcs_key_pair_), this->rpcs_contact_,
-      std::bind(&TestCallback, args::_1, args::_2, &done, &response_code));
+  this->rpcs_->Ping(this->GetPrivateKeyPtr(this->rpcs_key_pair_),
+                    this->rpcs_contact_,
+                    std::bind(&TestCallback, args::_1, args::_2, &done,
+                              &response_code));
 
   while (!done)
     Sleep(boost::posix_time::milliseconds(10));
@@ -361,7 +363,7 @@ TYPED_TEST_P(RpcsTest, FUNC_PingNoTarget) {
 TYPED_TEST_P(RpcsTest, FUNC_PingTarget) {
   bool done(false);
   int response_code(kPendingResult);
-  this->rpcs_->Ping(GetPrivateKeyPtr(this->rpcs_key_pair_),
+  this->rpcs_->Ping(this->GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_,
       std::bind(&TestCallback, args::_1, args::_2, &done, &response_code));
 
@@ -380,7 +382,7 @@ TYPED_TEST_P(RpcsTest, FUNC_FindNodesEmptyRT) {
   Key key = this->service_contact_.node_id();
 
   this->rpcs_->FindNodes(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindNodesCallback, args::_1, args::_2,
                                    args::_3, &contact_list, &done,
@@ -400,13 +402,13 @@ TYPED_TEST_P(RpcsTest, FUNC_FindNodesPopulatedRTnoNode) {
   int response_code(kGeneralError);
   std::vector<Contact> contact_list;
   this->PopulateRoutingTable(2*g_kKademliaK);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   Key key = this->service_contact_.node_id();
 
   this->rpcs_->FindNodes(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindNodesCallback, args::_1, args::_2,
                                    args::_3, &contact_list, &done,
@@ -440,15 +442,15 @@ TYPED_TEST_P(RpcsTest, FUNC_FindNodesPopulatedRTwithNode) {
   bool done(false);
   int response_code(kGeneralError);
   this->PopulateRoutingTable(2*g_kKademliaK-1);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   std::vector<Contact> contact_list;
   AddContact(this->routing_table_, this->service_contact_, this->rank_info_);
   Key key = this->service_contact_.node_id();
 
   this->rpcs_->FindNodes(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindNodesCallback, args::_1, args::_2,
                                    args::_3, &contact_list, &done,
@@ -482,15 +484,15 @@ TYPED_TEST_P(RpcsTest, FUNC_FindNodesVariableNodesRequest) {
   bool done(false);
   int response_code(kGeneralError);
   this->PopulateRoutingTable(2*g_kKademliaK-1);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   std::vector<Contact> contact_list;
   AddContact(this->routing_table_, this->service_contact_, this->rank_info_);
   Key key = this->service_contact_.node_id();
 
   this->rpcs_->FindNodes(key, g_kKademliaK/2,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindNodesCallback, args::_1, args::_2,
                                    args::_3, &contact_list, &done,
@@ -508,7 +510,7 @@ TYPED_TEST_P(RpcsTest, FUNC_FindNodesVariableNodesRequest) {
   contact_list.clear();
 
   this->rpcs_->FindNodes(key, g_kKademliaK*3/2,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindNodesCallback, args::_1, args::_2,
                                    args::_3, &contact_list, &done,
@@ -524,8 +526,8 @@ TYPED_TEST_P(RpcsTest, FUNC_FindValueVariableNodesRequest) {
   bool done(false);
   int response_code(kGeneralError);
   this->PopulateRoutingTable(2*g_kKademliaK);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   Key key = this->rpcs_contact_.node_id();
   KeyValueSignature kvs = MakeKVS(this->sender_crypto_key_id_, 1024,
@@ -540,7 +542,7 @@ TYPED_TEST_P(RpcsTest, FUNC_FindValueVariableNodesRequest) {
   // attempt to find a value when number_of_nodes_request < g_kKademliaK,
   // the response should contain g_kKademliaK nodes.
   this->rpcs_->FindValue(key, g_kKademliaK/2,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -559,7 +561,7 @@ TYPED_TEST_P(RpcsTest, FUNC_FindValueVariableNodesRequest) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->FindValue(key, g_kKademliaK*3/2,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -576,8 +578,8 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindValue) {
   bool done(false);
   int response_code(kGeneralError);
   this->PopulateRoutingTable(2*g_kKademliaK);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   Key key = this->rpcs_contact_.node_id();
   KeyValueSignature kvs = MakeKVS(this->sender_crypto_key_id_, 1024,
@@ -590,7 +592,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindValue) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -605,7 +607,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindValue) {
 
   done = false;
   this->rpcs_->Store(key, kvs.value, kvs.signature, ttl,
-                     GetPrivateKeyPtr(this->rpcs_key_pair_),
+                     this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                      this->service_contact_,
                      std::bind(&TestCallback, args::_1, args::_2, &done,
                                &response_code));
@@ -620,7 +622,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindValue) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -640,8 +642,8 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindAndDeleteValueXXXToBeRemoved) {
   bool done(false);
   int response_code(kGeneralError);
   this->PopulateRoutingTable(2*g_kKademliaK);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   Key key = this->rpcs_contact_.node_id();
   KeyValueSignature kvs = MakeKVS(this->sender_crypto_key_id_, 1024,
@@ -654,7 +656,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindAndDeleteValueXXXToBeRemoved) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -669,7 +671,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindAndDeleteValueXXXToBeRemoved) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->Store(key, kvs.value, kvs.signature, ttl,
-                     GetPrivateKeyPtr(this->rpcs_key_pair_),
+                     this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                      this->service_contact_,
                      std::bind(&TestCallback, args::_1, args::_2, &done,
                                &response_code));
@@ -687,7 +689,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindAndDeleteValueXXXToBeRemoved) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -700,7 +702,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindAndDeleteValueXXXToBeRemoved) {
   EXPECT_TRUE(return_contacts.empty());
 
   this->rpcs_->Delete(key, kvs.value, kvs.signature,
-      GetPrivateKeyPtr(this->rpcs_key_pair_),
+      this->GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_, std::bind(&TestCallback, args::_1, args::_2,
                                         &done, &response_code));
 
@@ -715,7 +717,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindAndDeleteValueXXXToBeRemoved) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -728,15 +730,15 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreAndFindAndDeleteValueXXXToBeRemoved) {
   EXPECT_EQ(kFailedToFindValue, response_code);
   EXPECT_TRUE(return_values_and_signatures.empty());
   EXPECT_EQ(g_kKademliaK, return_contacts.size());
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 
   this->StopAndReset();
 }
 
 TYPED_TEST_P(RpcsTest, FUNC_StoreMalicious) {
   this->PopulateRoutingTable(2*g_kKademliaK);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   bool done(false);
   int response_code(kGeneralError);
@@ -750,7 +752,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreMalicious) {
 
   // Malicious sender sends fake info
   this->rpcs_->Store(key, kvs.value, kvs.signature, ttl,
-                     GetPrivateKeyPtr(this->rpcs_key_pair_),
+                     this->GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_, std::bind(&TestCallback, args::_1, args::_2,
                                         &done, &response_code));
 
@@ -764,7 +766,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreMalicious) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -776,7 +778,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreMalicious) {
   EXPECT_EQ(kFailedToFindValue, response_code);
   EXPECT_TRUE(return_values_and_signatures.empty());
   EXPECT_EQ(g_kKademliaK, return_contacts.size());
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
   this->StopAndReset();
   this->SetContactValidation(true);
 }
@@ -801,7 +803,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreMultipleRequest) {
     else
       signature = kvs_vector[i].signature;
     this->rpcs_->Store(key, kvs_vector[i].value, signature, ttl,
-        GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
+        this->GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
         std::bind(&TestCallback, args::_1, args::_2, &status_response[i].first,
                   &status_response[i].second));
   }
@@ -820,18 +822,20 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreMultipleRequest) {
   for (int i = 0; i < 10; ++i) {
     if (i%2) {
       EXPECT_NE(kSuccess, status_response[i].second);
-      EXPECT_FALSE(IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
+      EXPECT_FALSE(this->IsKeyValueInDataStore(kvs_vector[i],
+                                               this->data_store_));
     } else {
       EXPECT_EQ(kSuccess, status_response[i].second);
-      EXPECT_TRUE(IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
+      EXPECT_TRUE(this->IsKeyValueInDataStore(kvs_vector[i],
+                                              this->data_store_));
     }
   }
 }
 
 TYPED_TEST_P(RpcsTest, FUNC_StoreRefresh) {
   this->PopulateRoutingTable(2*g_kKademliaK);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   bool done(false);
   int response_code(kGeneralError);
@@ -850,7 +854,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefresh) {
 
   // send original store request
   this->rpcs_->Store(key, kvs.value, kvs.signature, ttl,
-                     GetPrivateKeyPtr(this->rpcs_key_pair_),
+                     this->GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_, std::bind(&TestCallback, args::_1, args::_2,
                                         &done, &response_code));
 
@@ -864,7 +868,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefresh) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->StoreRefresh(message, store_message_sig,
-      GetPrivateKeyPtr(this->rpcs_key_pair_),
+      this->GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_, std::bind(&TestCallback, args::_1, args::_2,
                                         &done, &response_code));
 
@@ -878,7 +882,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefresh) {
   return_values_and_signatures.clear();
   return_contacts.clear();
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -898,7 +902,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefresh) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->StoreRefresh(message, store_message_sig,
-      GetPrivateKeyPtr(this->rpcs_key_pair_),
+      this->GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_, std::bind(&TestCallback, args::_1, args::_2,
                                         &done, &response_code));
 
@@ -912,7 +916,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefresh) {
   return_values_and_signatures.clear();
   return_contacts.clear();
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -924,7 +928,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefresh) {
   EXPECT_EQ(kFailedToFindValue, response_code);
   EXPECT_TRUE(return_values_and_signatures.empty());
   EXPECT_EQ(g_kKademliaK, return_contacts.size());
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 
   this->StopAndReset();
 }
@@ -946,7 +950,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMultipleRequests) {
     this->AddToReceiverDataStore(kvs_vector[i], this->sender_crypto_key_id_,
                                  sender, request_signature);
     req_sig_vector.push_back(request_signature);
-    EXPECT_TRUE(IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
+    EXPECT_TRUE(this->IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
     status_response.push_back(std::make_pair(false, -1));
     refresh_time_old_vector.push_back(this->GetRefreshTime(kvs_vector[i]));
   }
@@ -959,7 +963,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMultipleRequests) {
     else
       req_signature = req_sig_vector[i].second;
     this->rpcs_->StoreRefresh(req_sig_vector[i].first, req_signature,
-        GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
+        this->GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
         std::bind(&TestCallback, args::_1, args::_2, &status_response[i].first,
                   &status_response[i].second));
   }
@@ -971,7 +975,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMultipleRequests) {
   this->StopAndReset();
   // Check results
   for (size_t i = 0; i < 10; ++i) {
-    EXPECT_TRUE(IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
+    EXPECT_TRUE(this->IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
     if (i%2) {
       EXPECT_NE(kSuccess, status_response[i].second);
       EXPECT_EQ(this->GetRefreshTime(kvs_vector[i]),
@@ -986,8 +990,8 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMultipleRequests) {
 
 TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMalicious) {
   this->PopulateRoutingTable(2*g_kKademliaK);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   bool done(false);
   int response_code(kGeneralError);
@@ -1006,7 +1010,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMalicious) {
                     this->sender_crypto_key_id_.public_key);
 
   this->rpcs_->Store(key, kvs.value, kvs.signature, ttl,
-      GetPrivateKeyPtr(this->rpcs_key_pair_),
+      this->GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_, std::bind(&TestCallback, args::_1, args::_2,
                                         &done, &response_code));
 
@@ -1027,7 +1031,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMalicious) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->StoreRefresh(message, store_message_sig,
-      GetPrivateKeyPtr(this->rpcs_key_pair_),
+      this->GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_, std::bind(&TestCallback, args::_1, args::_2,
                                         &done, &response_code));
 
@@ -1043,7 +1047,7 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMalicious) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -1055,15 +1059,15 @@ TYPED_TEST_P(RpcsTest, FUNC_StoreRefreshMalicious) {
   EXPECT_EQ(kFailedToFindValue, response_code);
   EXPECT_TRUE(return_values_and_signatures.empty());
   EXPECT_EQ(g_kKademliaK, return_contacts.size());
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 
   this->StopAndReset();
 }
 
 TYPED_TEST_P(RpcsTest, FUNC_Delete) {
   this->PopulateRoutingTable(2*g_kKademliaK);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   bool done(false);
   int response_code(-1);
@@ -1074,10 +1078,10 @@ TYPED_TEST_P(RpcsTest, FUNC_Delete) {
   RequestAndSignature request_signature("", "");
   this->AddToReceiverDataStore(kvs, this->sender_crypto_key_id_,
                                this->rpcs_contact_, request_signature);
-  EXPECT_TRUE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_TRUE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 
   this->rpcs_->Delete(key, kvs.value, kvs.signature,
-                      GetPrivateKeyPtr(this->rpcs_key_pair_),
+                      this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                       this->service_contact_, std::bind(&TestCallback, args::_1,
                                                         args::_2, &done,
                                                         &response_code));
@@ -1091,7 +1095,7 @@ TYPED_TEST_P(RpcsTest, FUNC_Delete) {
   done = false;
   response_code = kGeneralError;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -1105,7 +1109,7 @@ TYPED_TEST_P(RpcsTest, FUNC_Delete) {
   EXPECT_EQ(kFailedToFindValue, response_code);
   EXPECT_TRUE(return_values_and_signatures.empty());
   EXPECT_EQ(g_kKademliaK, return_contacts.size());
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 }
 
 TYPED_TEST_P(RpcsTest, FUNC_DeleteMalicious) {
@@ -1118,12 +1122,12 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteMalicious) {
   RequestAndSignature request_signature("", "");
   this->AddToReceiverDataStore(kvs, this->sender_crypto_key_id_,
                                this->rpcs_contact_, request_signature);
-  EXPECT_TRUE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_TRUE(this->IsKeyValueInDataStore(kvs, this->data_store_));
   // Setting contact validation at service end to fail.
   this->SetContactValidation(false);
   // Malicious sender sends fake request.
   this->rpcs_->Delete(key, kvs.value, kvs.signature,
-      GetPrivateKeyPtr(this->rpcs_key_pair_),
+      this->GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_, std::bind(&TestCallback, args::_1, args::_2,
                                         &done, &response_code));
 
@@ -1140,7 +1144,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteMalicious) {
   done = false;
   response_code = -1;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -1154,7 +1158,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteMalicious) {
   EXPECT_EQ(kSuccess, response_code);
   EXPECT_EQ(kvs.value, return_values_and_signatures[0].first);
   EXPECT_TRUE(return_contacts.empty());
-  EXPECT_TRUE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_TRUE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 }
 
 TYPED_TEST_P(RpcsTest, FUNC_DeleteNonExistingKey) {
@@ -1164,10 +1168,10 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteNonExistingKey) {
   KeyValueSignature kvs =
       MakeKVS(this->sender_crypto_key_id_, 1024, key.String(), "");
 
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 
   this->rpcs_->Delete(key, kvs.value, kvs.signature,
-      GetPrivateKeyPtr(this->rpcs_key_pair_),
+      this->GetPrivateKeyPtr(this->rpcs_key_pair_),
       this->service_contact_, std::bind(&TestCallback, args::_1, args::_2,
                                         &done, &response_code));
 
@@ -1176,7 +1180,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteNonExistingKey) {
   this->StopAndReset();
   EXPECT_EQ(kSuccess, response_code);
 
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 }
 
 TYPED_TEST_P(RpcsTest, FUNC_DeleteMultipleRequest) {
@@ -1192,7 +1196,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteMultipleRequest) {
     RequestAndSignature request_signature("", "");
     this->AddToReceiverDataStore(kvs_vector[i], this->sender_crypto_key_id_,
                                  this->rpcs_contact_, request_signature);
-    EXPECT_TRUE(IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
+    EXPECT_TRUE(this->IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
   }
   std::string signature;
 
@@ -1204,7 +1208,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteMultipleRequest) {
                   this->sender_crypto_key_id_.private_key,
                   &signature);
     this->rpcs_->Delete(key, kvs_vector[i].value, signature,
-                        GetPrivateKeyPtr(
+                        this->GetPrivateKeyPtr(
                             this->rpcs_key_pair_),
                             this->service_contact_,
                             std::bind(&TestCallback, args::_1, args::_2,
@@ -1225,10 +1229,12 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteMultipleRequest) {
   // Checking results
   for (int i = 0; i < 10; ++i) {
     if (i % 2) {
-      EXPECT_TRUE(IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
+      EXPECT_TRUE(this->IsKeyValueInDataStore(kvs_vector[i],
+                                              this->data_store_));
       EXPECT_NE(kSuccess, status_response[i].second) << "Failed index: " << i;
     } else {
-      EXPECT_FALSE(IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
+      EXPECT_FALSE(this->IsKeyValueInDataStore(kvs_vector[i],
+                                               this->data_store_));
       EXPECT_EQ(kSuccess, status_response[i].second) << "Failed index: " << i;
     }
   }
@@ -1236,8 +1242,8 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteMultipleRequest) {
 
 TYPED_TEST_P(RpcsTest, FUNC_DeleteRefresh) {
   this->PopulateRoutingTable(2*g_kKademliaK);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   bool done(false);
   int response_code(-1);
@@ -1251,16 +1257,16 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefresh) {
   KeyValueSignature kvs = MakeKVS(crypto_key_data, 4096, key.String(), "");
   RequestAndSignature request_signature("", "");
   this->AddToReceiverDataStore(kvs, crypto_key_data, sender, request_signature);
-  EXPECT_TRUE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_TRUE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 
   // Deleting
   this->DeleteFromReceiverDataStore(kvs, crypto_key_data, sender,
                                     request_signature);
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
   bptime::ptime refresh_time_old = this->GetRefreshTime(kvs);
 
   this->rpcs_->DeleteRefresh(request_signature.first, request_signature.second,
-                             GetPrivateKeyPtr(this->rpcs_key_pair_),
+                             this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                              this->service_contact_,
                              std::bind(&TestCallback, args::_1, args::_2, &done,
                                        &response_code));
@@ -1274,7 +1280,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefresh) {
   done = false;
   response_code = -1;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -1288,15 +1294,15 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefresh) {
   EXPECT_EQ(kFailedToFindValue, response_code);
   EXPECT_TRUE(return_values_and_signatures.empty());
   EXPECT_EQ(g_kKademliaK, return_contacts.size());
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
   // Refreshed
   EXPECT_GT(this->GetRefreshTime(kvs), refresh_time_old);
 }
 
 TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshStoredValue) {
   this->PopulateRoutingTable(2*g_kKademliaK);
-  routing_table_->GetAllContacts(&contacts_);
-  std::sort(contacts_.begin(), contacts_.end());
+  this->routing_table_->GetAllContacts(&this->contacts_);
+  std::sort(this->contacts_.begin(), this->contacts_.end());
 
   bool done(false);
   int response_code(-1);
@@ -1310,16 +1316,16 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshStoredValue) {
   RequestAndSignature request_sig("", "");
   KeyValueSignature kvs = MakeKVS(crypto_key_data, 1024, key.String(), "");
   this->AddToReceiverDataStore(kvs, crypto_key_data, sender, request_sig);
-  EXPECT_TRUE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_TRUE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 
   // Value not deleted
   RequestAndSignature request_signature("", "");
-  EXPECT_TRUE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_TRUE(this->IsKeyValueInDataStore(kvs, this->data_store_));
   bptime::ptime refresh_time_old = this->GetRefreshTime(kvs);
 
   // Delete refresh without deleting
   this->rpcs_->DeleteRefresh(request_signature.first, request_signature.second,
-      GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
+      this->GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
       std::bind(&TestCallback, args::_1, args::_2, &done, &response_code));
 
   while (!done)
@@ -1331,7 +1337,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshStoredValue) {
   done = false;
   response_code = -1;
   this->rpcs_->FindValue(key, g_kKademliaK,
-                         GetPrivateKeyPtr(this->rpcs_key_pair_),
+                         this->GetPrivateKeyPtr(this->rpcs_key_pair_),
                          this->service_contact_,
                          std::bind(&TestFindValueCallback, args::_1, args::_2,
                                    args::_3, args::_4, args::_5,
@@ -1346,7 +1352,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshStoredValue) {
   EXPECT_EQ(kvs.value, return_values_and_signatures[0].first);
   EXPECT_TRUE(return_contacts.empty());
 
-  EXPECT_TRUE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_TRUE(this->IsKeyValueInDataStore(kvs, this->data_store_));
   // Not Refreshed
   EXPECT_EQ(this->GetRefreshTime(kvs), refresh_time_old);
 }
@@ -1363,12 +1369,12 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshMalicious) {
                                                crypto_key_data);
   RequestAndSignature request_signature("", "");
   this->AddToReceiverDataStore(kvs, crypto_key_data, sender, request_signature);
-  EXPECT_TRUE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_TRUE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 
   // Deleting
   this->DeleteFromReceiverDataStore(kvs, crypto_key_data, sender,
                                     request_signature);
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
   bptime::ptime refresh_time_old = this->GetRefreshTime(kvs);
 
   // Setting contact validation at service end to fail.
@@ -1376,7 +1382,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshMalicious) {
 
   // Malicious sender sends fake info
   this->rpcs_->DeleteRefresh(request_signature.first, request_signature.second,
-      GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
+      this->GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
       std::bind(&TestCallback, args::_1, args::_2, &done, &response_code));
 
   while (!done)
@@ -1384,7 +1390,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshMalicious) {
   EXPECT_EQ(kSuccess, response_code);
 
   this->StopAndReset();
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
   EXPECT_EQ(this->GetRefreshTime(kvs), refresh_time_old);
 }
 
@@ -1405,7 +1411,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshNonExistingKey) {
   RequestAndSignature request_signature(delete_message, delete_message_sig);
   // Sending delete refresh
   this->rpcs_->DeleteRefresh(request_signature.first, request_signature.second,
-      GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
+      this->GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
       std::bind(&TestCallback, args::_1, args::_2, &done, &response_code));
 
   while (!done)
@@ -1413,7 +1419,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshNonExistingKey) {
   EXPECT_EQ(kSuccess, response_code);
 
   this->StopAndReset();
-  EXPECT_FALSE(IsKeyValueInDataStore(kvs, this->data_store_));
+  EXPECT_FALSE(this->IsKeyValueInDataStore(kvs, this->data_store_));
 }
 
 TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshMultipleRequests) {
@@ -1433,14 +1439,14 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshMultipleRequests) {
     RequestAndSignature request_signature("", "");
     this->AddToReceiverDataStore(kvs_vector[i], crypto_key_data, sender,
                            request_signature);
-    EXPECT_TRUE(IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
+    EXPECT_TRUE(this->IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
     status_response.push_back(std::make_pair(false, -1));
 
     // Deleting
     this->DeleteFromReceiverDataStore(kvs_vector[i], crypto_key_data, sender,
                                 request_signature);
     req_sig_vector.push_back(request_signature);
-    EXPECT_FALSE(IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
+    EXPECT_FALSE(this->IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
     refresh_time_old_vector.push_back(this->GetRefreshTime(kvs_vector[i]));
   }
   // Delete Refresh rpc
@@ -1451,7 +1457,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshMultipleRequests) {
     else
       req_signature = req_sig_vector[i].second;
     this->rpcs_->DeleteRefresh(req_sig_vector[i].first, req_signature,
-        GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
+        this->GetPrivateKeyPtr(this->rpcs_key_pair_), this->service_contact_,
         std::bind(&TestCallback, args::_1, args::_2, &status_response[i].first,
                   &status_response[i].second));
   }
@@ -1467,7 +1473,7 @@ TYPED_TEST_P(RpcsTest, FUNC_DeleteRefreshMultipleRequests) {
   this->StopAndReset();
   // Checking results
   for (size_t i = 0; i < 10; ++i) {
-    EXPECT_FALSE(IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
+    EXPECT_FALSE(this->IsKeyValueInDataStore(kvs_vector[i], this->data_store_));
     if (i%2) {
       EXPECT_NE(kSuccess, status_response[i].second);
       EXPECT_EQ(this->GetRefreshTime(kvs_vector[i]),

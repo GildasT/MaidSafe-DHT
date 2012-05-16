@@ -1609,9 +1609,12 @@ void NodeImpl::PingDownContactCallback(Contact down_contact,
   if (result != kSuccess) {
     // Increment failed RPC count until down contact is removed from the routing
     // table
-    for (int i = 0, result = 0;
-        result != kFailedToFindContact && i < kFailedRpcTolerance + 1; ++i)
-      result = routing_table_->IncrementFailedRpcCount(down_contact.node_id());
+    int res(kSuccess);
+    for (uint16_t i = 0;
+         res != kFailedToFindContact && i < kFailedRpcTolerance + 1;
+         ++i) {
+      res = routing_table_->IncrementFailedRpcCount(down_contact.node_id());
+    }
   } else {
     // Add the contact again to update its last_seen to now
     routing_table_->AddContact(down_contact, rank_info);
@@ -1638,10 +1641,10 @@ void NodeImpl::HandleRpcCallback(const Contact &contact,
   }
 #ifdef DEBUG
   if (routing_table_result != kSuccess)
+#endif
     DLOG(INFO) << DebugId(contact_) << ": Failed to update routing table for "
                << "contact " << DebugId(contact) << ".  RPC result: " << result
                << "  Update result: " << routing_table_result;
-#endif
 }
 
 void NodeImpl::AsyncHandleRpcCallback(const Contact &contact,

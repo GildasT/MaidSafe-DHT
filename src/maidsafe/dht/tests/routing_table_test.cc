@@ -114,13 +114,13 @@ class RoutingTableTest : public RoutingTableManipulator,
 
   size_t GetKBucketSizeForKey(int k_bucket_index) {
     auto contacts(GetContacts());
-    int own_bucket_index(own_bucket_index());
+    int own_bucket_ind(own_bucket_index());
     size_t count(
         std::count_if(contacts.begin(),
                       contacts.end(),
-                      [k_bucket_index, own_bucket_index]
+                      [k_bucket_index, own_bucket_ind]
                           (const RoutingTableContact &rt_contact)->bool {
-      if (k_bucket_index < own_bucket_index)
+      if (k_bucket_index < own_bucket_ind)
         return rt_contact.k_bucket_index == k_bucket_index;
       else
         return rt_contact.k_bucket_index >= k_bucket_index;

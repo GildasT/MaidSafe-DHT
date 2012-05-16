@@ -95,8 +95,8 @@ void AsymGetPublicKeyAndValidation::DummyContactValidationGetter(
 
 RoutingTableManipulator::RoutingTableManipulator(uint16_t k)
     : contact_(),
-      generated_ids_(),
-      routing_table_(new RoutingTable(NodeId(NodeId::kRandomId), k)) {
+      routing_table_(new RoutingTable(NodeId(NodeId::kRandomId), k)),
+      generated_ids_() {
   generated_ids_.push_back(routing_table_->kThisId_);
 }
 

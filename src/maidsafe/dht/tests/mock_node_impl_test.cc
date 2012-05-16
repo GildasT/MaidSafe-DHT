@@ -398,7 +398,7 @@ class MockRpcs : public Rpcs<TransportType>, public RoutingTableManipulator {
       response_list.push_back(node_list_[element]);
       RoutingTableContact new_routing_table_contact(node_list_[element],
                                                     target_id_, 0);
-      respond_contacts_->insert(new_routing_table_contact);
+      respond_contacts_->push_back(new_routing_table_contact);
     }
     Rpcs<TransportType>::asio_service_.post(
         std::bind(&MockRpcs<TransportType>::FindNodeResponseThread,
@@ -2210,8 +2210,8 @@ TEST_F(MockNodeImplTest, BEH_RemoveDownlistedContacts) {
 
 // Feed in Downlist != contacts for a full retain of contacts
   Contact downlist_contact;
-  while (static_cast<uint16_t>(test_contacts.size()) <
-        random_num_contacts + 1) {
+  while (static_cast<uint16_t>(test_contacts.size() - 1) <
+         random_num_contacts) {
     downlist_contact =
         ComposeContact(NodeId(GenerateUniqueRandomId(22)), 5600);
     test_contacts.insert(downlist_contact);

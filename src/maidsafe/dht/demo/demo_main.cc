@@ -29,9 +29,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
-#ifndef __APPLE__
-  #include "maidsafe/common/breakpad.h"
-#endif
 #include "maidsafe/common/crypto.h"
 #include "maidsafe/common/utils.h"
 
