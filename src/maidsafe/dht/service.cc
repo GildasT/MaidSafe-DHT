@@ -190,7 +190,7 @@ void Service::FindValue(const transport::Info &info,
 
   std::vector<Contact> closest_contacts, exclude_contacts;
   routing_table_->GetCloseContacts(key, num_nodes_requested,
-                                   exclude_contacts, &closest_contacts);
+                                   exclude_contacts, closest_contacts);
   for (size_t i = 0; i < closest_contacts.size(); ++i)
     (*response->add_closest_nodes()) = ToProtobuf(closest_contacts[i]);
 
@@ -213,7 +213,7 @@ void Service::FindNodes(const transport::Info &info,
 
   std::vector<Contact> closest_contacts, exclude_contacts;
   routing_table_->GetCloseContacts(key, num_nodes_requested, exclude_contacts,
-                                   &closest_contacts);
+                                   closest_contacts);
   for (size_t i = 0; i < closest_contacts.size(); ++i)
     *response->add_closest_nodes() = ToProtobuf(closest_contacts[i]);
   response->set_result(true);

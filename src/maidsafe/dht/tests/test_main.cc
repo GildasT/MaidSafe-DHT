@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
   // ERROR, and FATAL (0 to 3 respectively).
   FLAGS_ms_logging_common = google::FATAL;
   FLAGS_ms_logging_transport = google::FATAL;
-  FLAGS_ms_logging_dht = google::FATAL;
+  FLAGS_ms_logging_dht = google::WARNING;
 
   testing::InitGoogleTest(&argc, argv);
 #if defined FUNCTIONAL_NODE_TEST

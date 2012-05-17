@@ -531,15 +531,14 @@ TEST_P(NodeImplTest, FUNC_FindValue) {
                        far_key_, env_->node_ids_, env_->k_)) {
       bptime::time_duration total_sleep_time(bptime::milliseconds(0));
       const bptime::milliseconds kIterSleep(100);
-    if (GetDataStore(*it)->GetValues(far_key_.String(), &data_store_values))
-      size = data_store_values.size();
-    while (size != 4
-             && total_sleep_time < kTimeout_) {
+      if (GetDataStore(*it)->GetValues(far_key_.String(), &data_store_values))
+        size = data_store_values.size();
+      while (size != 4 && total_sleep_time < kTimeout_) {
         total_sleep_time += kIterSleep;
         Sleep(kIterSleep);
       }
       EXPECT_TRUE(GetDataStore(*it)->GetValues(far_key_.String(),
-                                                &data_store_values));
+                                               &data_store_values));
       EXPECT_EQ(4, data_store_values.size());
     } else {
       EXPECT_FALSE(GetDataStore(*it)->HasKey(far_key_.String()));
@@ -1400,6 +1399,22 @@ TEST_P(NodeImplTest, FUNC_StoreRefreshInvalidSigner) {
       if (itr != node_to_leave &&
           (GetDataStore(*itr)->key_value_index_->size() == kNumValues - 1))
         not_refreshed = true;
+    }
+  }
+  if (!not_refreshed) {
+    std::cout << "\n\n=======================================================\n"
+              << "kNumValues: " << kNumValues << std::endl;
+    for (itr = env_->node_containers_.begin();
+         itr != env_->node_containers_.end(); ++itr) {
+      std::cout << "Assessing " << DebugId((*itr)->node()->contact()) << '\t'
+                << GetDataStore(*itr)->key_value_index_->size() << " values.";
+      if (WithinKClosest((*itr)->node()->contact().node_id(), far_key_,
+                         env_->node_ids_, env_->k_ + 1)) {
+        std::cout << "\tWithin k + 1 closest"
+                  << (itr == node_to_leave ? " and is node_to_leave.\n" : "\n");
+      } else {
+        std::cout << "\tNot within k closest.\n";
+      }
     }
   }
   ASSERT_TRUE(not_refreshed);

@@ -143,8 +143,6 @@ void NodeImpl::Join(const NodeId &node_id,
     asymm::GenerateKeyPair(&key_pair);
     default_private_key_.reset(new asymm::PrivateKey(key_pair.private_key));
     default_public_key_.reset(new asymm::PublicKey(key_pair.public_key));
-  } else {
-    DLOG(INFO) << EncodeToHex(node_id.String());
   }
 
   if (!rpcs_) {
@@ -308,7 +306,7 @@ OrderedContacts NodeImpl::GetClosestContactsLocally(
     const Key &key,
     const uint16_t &total_contacts) {
   std::vector<Contact> close_nodes, excludes;
-  routing_table_->GetCloseContacts(key, total_contacts, excludes, &close_nodes);
+  routing_table_->GetCloseContacts(key, total_contacts, excludes, close_nodes);
   OrderedContacts close_contacts(CreateOrderedContacts(close_nodes.begin(),
                                                        close_nodes.end(), key));
   // This node's ID will not be held in the routing table, so add it now.  The
@@ -489,7 +487,7 @@ void NodeImpl::GetContact(const NodeId &node_id, GetContactFunctor callback) {
   }
 
   std::vector<Contact> close_nodes, excludes;
-  routing_table_->GetCloseContacts(node_id, k_, excludes, &close_nodes);
+  routing_table_->GetCloseContacts(node_id, k_, excludes, close_nodes);
   OrderedContacts close_contacts(CreateOrderedContacts(close_nodes.begin(),
                                                        close_nodes.end(),
                                                        node_id));
@@ -569,9 +567,6 @@ void NodeImpl::PingCallback(RankInfoPtr rank_info,
 }
 
 void NodeImpl::SetLastSeenToNow(const Contact &contact) {
-  Contact result;
-  if (routing_table_->GetContact(contact.node_id(), &result) != kSuccess)
-    return;
   // If the contact exists in the routing table, adding it again will set its
   // last_seen to now.
   routing_table_->AddContact(contact, RankInfoPtr());
@@ -590,6 +585,8 @@ RankInfoPtr NodeImpl::GetLocalRankInfo(const Contact &contact) const {
 }
 
 void NodeImpl::GetAllContacts(std::vector<Contact> *contacts) {
+  if (!contacts)
+    return;
   routing_table_->GetAllContacts(contacts);
 }
 
@@ -791,7 +788,7 @@ void NodeImpl::IterativeFindCallback(
     while (downlist_itr != lookup_args->downlist.end())
       excludes.push_back((*downlist_itr++).first);
     routing_table_->GetCloseContacts(lookup_args->kTarget, k_, excludes,
-                                     &close_nodes);
+                                     close_nodes);
     if (!close_nodes.empty()) {
       OrderedContacts close_contacts(
           CreateOrderedContacts(close_nodes.begin(), close_nodes.end(),
@@ -1569,7 +1566,7 @@ void NodeImpl::PingOldestContactCallback(Contact oldest_contact,
 void NodeImpl::ConnectPingOldestContact() {
   if (ping_oldest_contact_ == boost::signals2::connection()) {
     ping_oldest_contact_ =
-        routing_table_->ping_oldest_contact()->connect(
+        routing_table_->ping_oldest_contact().connect(
             boost::bind(&NodeImpl::PingOldestContact, this, _1, _2, _3));
   }
 }
@@ -1592,7 +1589,7 @@ void NodeImpl::ValidateContactCallback(
 
 void NodeImpl::ConnectValidateContact() {
   if (validate_contact_ == boost::signals2::connection()) {
-    validate_contact_ = routing_table_->validate_contact()->connect(
+    validate_contact_ = routing_table_->validate_contact().connect(
         boost::bind(&NodeImpl::ValidateContact, this, _1));
   }
 }
@@ -1610,9 +1607,12 @@ void NodeImpl::PingDownContactCallback(Contact down_contact,
   if (result != kSuccess) {
     // Increment failed RPC count until down contact is removed from the routing
     // table
-    for (int i = 0, result = 0;
-        result != kFailedToFindContact && i < kFailedRpcTolerance + 1; ++i)
-      result = routing_table_->IncrementFailedRpcCount(down_contact.node_id());
+    int res(kSuccess);
+    for (uint16_t i = 0;
+         res != kFailedToFindContact && i < kFailedRpcTolerance + 1;
+         ++i) {
+      res = routing_table_->IncrementFailedRpcCount(down_contact.node_id());
+    }
   } else {
     // Add the contact again to update its last_seen to now
     routing_table_->AddContact(down_contact, rank_info);
@@ -1621,7 +1621,7 @@ void NodeImpl::PingDownContactCallback(Contact down_contact,
 
 void NodeImpl::ConnectPingDownContact() {
   if (ping_down_contact_ == boost::signals2::connection()) {
-    ping_down_contact_ = routing_table_->ping_down_contact()->connect(
+    ping_down_contact_ = routing_table_->ping_down_contact().connect(
         boost::bind(&NodeImpl::PingDownContact, this, _1));
   }
 }
@@ -1639,10 +1639,10 @@ void NodeImpl::HandleRpcCallback(const Contact &contact,
   }
 #ifdef DEBUG
   if (routing_table_result != kSuccess)
+#endif
     DLOG(INFO) << DebugId(contact_) << ": Failed to update routing table for "
                << "contact " << DebugId(contact) << ".  RPC result: " << result
                << "  Update result: " << routing_table_result;
-#endif
 }
 
 void NodeImpl::AsyncHandleRpcCallback(const Contact &contact,

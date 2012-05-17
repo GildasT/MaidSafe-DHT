@@ -43,6 +43,8 @@ namespace dht {
 
 namespace test {
 
+const boost::posix_time::milliseconds kNetworkDelay(200);
+
 AsymGetPublicKeyAndValidation::AsymGetPublicKeyAndValidation(
     const asymm::Identity &/*public_key_id*/,
     const asymm::PublicKey &/*public_key*/,
@@ -91,18 +93,23 @@ void AsymGetPublicKeyAndValidation::DummyContactValidationGetter(
 }
 
 
-CreateContactAndNodeId::CreateContactAndNodeId(uint16_t k)
+RoutingTableManipulator::RoutingTableManipulator(uint16_t k)
     : contact_(),
-      node_id_(NodeId::kRandomId),
-      generated_ids_(),
-      routing_table_(new RoutingTable(node_id_, k)) {
-        generated_ids_.push_back(node_id_);
+      routing_table_(new RoutingTable(NodeId(NodeId::kRandomId), k)),
+      generated_ids_() {
+  generated_ids_.push_back(routing_table_->kThisId_);
 }
 
-NodeId CreateContactAndNodeId::GenerateUniqueRandomId(const NodeId &holder,
-                                                      const int &pos) {
-  std::string holder_id = holder.ToStringEncoded(NodeId::kBinary);
-  std::bitset<kKeySizeBits> holder_id_binary_bitset(holder_id);
+NodeId RoutingTableManipulator::GenerateUniqueRandomId(
+    int common_leading_bits,
+    const NodeId &target_id) {
+  BOOST_ASSERT(common_leading_bits < kKeySizeBits);
+  std::string target;
+  if (target_id == NodeId(kZeroId))
+    target = kHolderId().ToStringEncoded(NodeId::kBinary);
+  else
+    target = target_id.ToStringEncoded(NodeId::kBinary);
+  std::bitset<kKeySizeBits> target_id_binary_bitset(target);
   NodeId new_node;
   std::string new_node_string;
   bool repeat(true);
@@ -110,13 +117,18 @@ NodeId CreateContactAndNodeId::GenerateUniqueRandomId(const NodeId &holder,
   // generate a random ID and make sure it has not been generated previously
   do {
     new_node = NodeId(NodeId::kRandomId);
-    std::string new_id = new_node.ToStringEncoded(NodeId::kBinary);
-    std::bitset<kKeySizeBits> binary_bitset(new_id);
-    for (int i = kKeySizeBits - 1; i >= pos; --i)
-      binary_bitset[i] = holder_id_binary_bitset[i];
-    binary_bitset[pos].flip();
-    new_node_string = binary_bitset.to_string();
-    new_node = NodeId(new_node_string, NodeId::kBinary);
+    if (common_leading_bits >= 0) {
+      std::string new_id = new_node.ToStringEncoded(NodeId::kBinary);
+      std::bitset<kKeySizeBits> binary_bitset(new_id);
+      for (int i(0); i != common_leading_bits; ++i) {
+        binary_bitset[kKeySizeBits - i - 1] =
+            target_id_binary_bitset[kKeySizeBits - i - 1];
+      }
+      binary_bitset[kKeySizeBits - common_leading_bits - 1] =
+          !target_id_binary_bitset[kKeySizeBits - common_leading_bits - 1];
+      new_node_string = binary_bitset.to_string();
+      new_node = NodeId(new_node_string, NodeId::kBinary);
+    }
     // make sure the new contact not already existed in the routing table
     auto result = std::find(generated_ids_.begin(),
                             generated_ids_.end(),
@@ -133,67 +145,7 @@ NodeId CreateContactAndNodeId::GenerateUniqueRandomId(const NodeId &holder,
   return new_node;
 }
 
-Contact CreateContactAndNodeId::GenerateUniqueContact(
-    const NodeId &holder,
-    const int &pos,
-    const NodeId &target,
-    RoutingTableContactsContainer *generated_nodes) {
-  std::string holder_id = holder.ToStringEncoded(NodeId::kBinary);
-  std::bitset<kKeySizeBits> holder_id_binary_bitset(holder_id);
-  NodeId new_node;
-  std::string new_node_string;
-  bool repeat(true);
-  uint16_t times_of_try(0);
-  Contact new_contact;
-  // generate a random contact and make sure it has not been generated
-  // within the previously record
-  do {
-    new_node = NodeId(NodeId::kRandomId);
-    std::string new_id = new_node.ToStringEncoded(NodeId::kBinary);
-    std::bitset<kKeySizeBits> binary_bitset(new_id);
-    for (int i = kKeySizeBits - 1; i >= pos; --i)
-      binary_bitset[i] = holder_id_binary_bitset[i];
-    binary_bitset[pos].flip();
-    new_node_string = binary_bitset.to_string();
-    new_node = NodeId(new_node_string, NodeId::kBinary);
-
-    // make sure the new one hasn't been set as down previously
-    ContactsById key_indx = generated_nodes->get<NodeIdTag>();
-    auto it = key_indx.find(new_node);
-    if (it == key_indx.end()) {
-      new_contact = ComposeContact(new_node, 5000);
-      RoutingTableContact new_routing_table_contact(new_contact, target, 0);
-      generated_nodes->insert(new_routing_table_contact);
-      repeat = false;
-    }
-    ++times_of_try;
-  } while (repeat && (times_of_try < 1000));
-  // prevent deadlock, throw out an error message in case of deadlock
-  if (times_of_try == 1000)
-    EXPECT_LT(1000, times_of_try);
-  return new_contact;
-}
-
-NodeId CreateContactAndNodeId::GenerateRandomId(const NodeId &holder,
-                                                const int &pos) {
-  std::string holder_id = holder.ToStringEncoded(NodeId::kBinary);
-  std::bitset<kKeySizeBits> holder_id_binary_bitset(holder_id);
-  NodeId new_node;
-  std::string new_node_string;
-
-  new_node = NodeId(NodeId::kRandomId);
-  std::string new_id = new_node.ToStringEncoded(NodeId::kBinary);
-  std::bitset<kKeySizeBits> binary_bitset(new_id);
-  for (int i = kKeySizeBits - 1; i >= pos; --i)
-    binary_bitset[i] = holder_id_binary_bitset[i];
-  binary_bitset[pos].flip();
-  new_node_string = binary_bitset.to_string();
-  new_node = NodeId(new_node_string, NodeId::kBinary);
-
-  return new_node;
-}
-
-Contact CreateContactAndNodeId::ComposeContact(const NodeId &node_id,
+Contact RoutingTableManipulator::ComposeContact(const NodeId &node_id,
                                                const Port &port) {
   transport::Endpoint end_point("127.0.0.1", port);
   std::vector<transport::Endpoint> local_endpoints(1, end_point);
@@ -202,7 +154,7 @@ Contact CreateContactAndNodeId::ComposeContact(const NodeId &node_id,
   return contact;
 }
 
-Contact CreateContactAndNodeId::ComposeContactWithKey(
+Contact RoutingTableManipulator::ComposeContactWithKey(
     const NodeId &node_id,
     const Port &port,
     const asymm::Keys &rsa_key_pair) {
@@ -217,16 +169,62 @@ Contact CreateContactAndNodeId::ComposeContactWithKey(
   return contact;
 }
 
-void CreateContactAndNodeId::PopulateContactsVector(
-    const int &count,
-    const int &pos,
-    std::vector<Contact> *contacts) {
-  for (int i = 0; i < count; ++i) {
-    NodeId contact_id = GenerateRandomId(node_id_, pos);
+void RoutingTableManipulator::PopulateRoutingTable(int count,
+                                                   int common_leading_bits) {
+  for (int i(0); i != count; ++i) {
+    NodeId contact_id = GenerateUniqueRandomId(common_leading_bits);
     Contact contact = ComposeContact(contact_id, 5000);
-    contacts->push_back(contact);
+    routing_table_->AddContact(contact, RankInfoPtr(new transport::Info));
+    routing_table_->SetValidated(contact_id, true);
   }
 }
+
+void RoutingTableManipulator::GetContact(const NodeId &node_id,
+                                        Contact *contact) {
+  std::vector<Contact> excludes, close_contacts;
+  routing_table_->GetCloseContacts(node_id, 1, excludes, close_contacts);
+  if (!close_contacts.empty() && close_contacts.front().node_id() == node_id)
+    *contact = close_contacts.front();
+}
+
+std::vector<RoutingTableContact> RoutingTableManipulator::GetContacts() const {
+  boost::mutex::scoped_lock lock(routing_table_->mutex_);
+  return routing_table_->contacts_;
+}
+
+bool RoutingTableManipulator::GetRoutingTableContact(
+    const NodeId &node_id,
+    RoutingTableContact &routing_table_contact) const {
+  boost::mutex::scoped_lock lock(routing_table_->mutex_);
+  auto itr(std::find_if(routing_table_->contacts_.begin(),
+                        routing_table_->contacts_.end(),
+                        [&node_id](const RoutingTableContact &rt_contact) {
+    return rt_contact.contact.node_id() == node_id;
+  }));
+
+  if (itr == routing_table_->contacts_.end())
+    return false;
+
+  routing_table_contact = *itr;
+  return true;
+}
+
+RoutingTable::UnvalidatedContacts
+    RoutingTableManipulator::GetUnvalidatedContacts() const {
+  boost::mutex::scoped_lock lock(routing_table_->mutex_);
+  return routing_table_->unvalidated_contacts_;
+}
+
+void RoutingTableManipulator::Reset() {
+  generated_ids_.clear();
+  generated_ids_.push_back(routing_table_->kThisId_);
+  boost::mutex::scoped_lock lock(routing_table_->mutex_);
+  routing_table_->contacts_.clear();
+  routing_table_->unvalidated_contacts_.clear();
+  routing_table_->own_bucket_index_ = 0;
+}
+
+
 
 KeyValueSignature MakeKVS(const asymm::Keys &rsa_key_pair,
                           const size_t &value_size,

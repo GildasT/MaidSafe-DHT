@@ -68,7 +68,7 @@ void Operations::TestFindAndPing(const std::vector<NodeId> &nodes,
                                  const int &iterations) {
   std::vector<Contact> contacts;
   {
-    printf("Finding %d nodes...\n", nodes.size());
+    std::cout << "Finding " << nodes.size() << " nodes..." << std::endl;
 
     Stats<uint64_t> stats;
     std::shared_ptr<CallbackData> data(new CallbackData());
@@ -88,15 +88,15 @@ void Operations::TestFindAndPing(const std::vector<NodeId> &nodes,
       contacts.push_back(ctc);
     }
 
-    printf("Done: total %.2f s, min/avg/max %.2f/%.2f/%.2f s\n",
-            stats.Sum() / 1000.0,
-            stats.Min() / 1000.0,
-            stats.Mean() / 1000.0,
-            stats.Max() / 1000.0);
+    std::cout << std::setprecision(2) << std::ios::fixed << "Done: total "
+              << stats.Sum() / 1000.0 << " s, min/avg/max "
+              << stats.Min() / 1000.0 << "/"
+              << stats.Mean() / 1000.0 << "/"
+              << stats.Max() / 1000.0 << " s" << std::endl;
   }
   if (!contacts.empty()) {
-    printf("Pinging %d contacts, %d iterations...\n",
-           contacts.size(), iterations);
+    std::cout << "Pinging " << contacts.size() << " contacts, " << iterations
+              << " iterations..." << std::endl;
 
     Stats<uint64_t> stats;
     for (size_t i = 0; i < contacts.size(); ++i) {
@@ -112,21 +112,22 @@ void Operations::TestFindAndPing(const std::vector<NodeId> &nodes,
 //        it_stats.Add(GetEpochMilliseconds() - t);
       }
       stats.Add(it_stats.Mean());
-      printf(" Pinged contact %d, %02d/%02d times "
-             "(total %.2f s, min/avg/max %.2f/%.2f/%.2f s)\n", i + 1,
-             data->succeeded_count, data->returned_count,
-             it_stats.Sum() / 1000.0,
-             it_stats.Min() / 1000.0,
-             it_stats.Mean() / 1000.0,
-             it_stats.Max() / 1000.0);
+      std::cout << " Pinged contact " << std::setw(2) << i + 1 << ", "
+                << std::setw(2) << data->succeeded_count << "/"
+                << std::setw(2) << data->returned_count << " times (total "
+                << std::setprecision(2) << std::ios::fixed
+                << it_stats.Sum() / 1000.0 << " s, min/avg/max "
+                << it_stats.Min() / 1000.0 << "/"
+                << it_stats.Mean() / 1000.0 << "/"
+                << it_stats.Max() / 1000.0 << "s)" << std::endl;
     }
 
-    printf("Done: min/avg/max %.2f/%.2f/%.2f s\n",
-            stats.Min() / 1000.0,
-            stats.Mean() / 1000.0,
-            stats.Max() / 1000.0);
+    std::cout << std::setprecision(2) << std::ios::fixed << "Done: min/avg/max "
+              << stats.Min() / 1000.0 << "/"
+              << stats.Mean() / 1000.0 << "/"
+              << stats.Max() / 1000.0 << " s" << std::endl;
   } else {
-    printf("No contacts for nodes found.\n");
+    std::cout << "No contacts for nodes found." << std::endl;
   }
 }
 
@@ -152,9 +153,10 @@ void Operations::TestStoreAndFind(const std::vector<NodeId> &nodes,
         size = "1 MB";
         break;
     }
-    printf("Storing %s value on %d * k closest nodes, %d iterations...\n",
-           size.c_str(), nodes.size(), iterations);
 
+    std::cout << "Storing " << size << " value on " << nodes.size()
+              << " * k closest nodes, " << iterations << " iterations..."
+              << std::endl;
 
     Stats<uint64_t> store_stats;
     for (size_t i = 0; i < nodes.size(); ++i) {
@@ -205,13 +207,14 @@ void Operations::TestStoreAndFind(const std::vector<NodeId> &nodes,
 //             it_stats.Max() / 1000.0);
     }
 
-    printf("Done: min/avg/max %.2f/%.2f/%.2f s\n",
-           store_stats.Min() / 1000.0,
-           store_stats.Mean() / 1000.0,
-           store_stats.Max() / 1000.0);
+    std::cout << std::setprecision(2) << std::ios::fixed << "Done: min/avg/max "
+              << store_stats.Min() / 1000.0 << "/"
+              << store_stats.Mean() / 1000.0 << "/"
+              << store_stats.Max() / 1000.0 << " s" << std::endl;
 
-    printf("Loading %s value from %d closest nodes, %d iterations...\n",
-           size.c_str(), nodes.size(), iterations);
+    std::cout << "Loading " << size << " value from " << nodes.size()
+              << " closest nodes, " << iterations << " iterations..."
+              << std::endl;
 
     Stats<uint64_t> load_stats;
     for (size_t i = 0; i < nodes.size(); ++i) {
@@ -230,19 +233,20 @@ void Operations::TestStoreAndFind(const std::vector<NodeId> &nodes,
 //        it_stats.Add(GetEpochMilliseconds() - t);
       }
       load_stats.Add(it_stats.Mean());
-      printf(" Loaded from %d, %02d/%02d times "
-             "(total %.2f s, min/avg/max %.2f/%.2f/%.2f s)\n", i + 1,
-             data->succeeded_count, data->returned_count,
-             it_stats.Sum() / 1000.0,
-             it_stats.Min() / 1000.0,
-             it_stats.Mean() / 1000.0,
-             it_stats.Max() / 1000.0);
+      std::cout << " Loaded from " << std::setw(2) << i + 1 << ", "
+                << std::setw(2) << data->succeeded_count << "/"
+                << std::setw(2) << data->returned_count << " times (total "
+                << std::setprecision(2) << std::ios::fixed
+                << it_stats.Sum() / 1000.0 << " s, min/avg/max "
+                << it_stats.Min() / 1000.0 << "/"
+                << it_stats.Mean() / 1000.0 << "/"
+                << it_stats.Max() / 1000.0 << " s)" << std::endl;
     }
 
-    printf("Done: min/avg/max %.2f/%.2f/%.2f s\n",
-           load_stats.Min() / 1000.0,
-           load_stats.Mean() / 1000.0,
-           load_stats.Max() / 1000.0);
+    std::cout << std::setprecision(2) << std::ios::fixed << "Done: min/avg/max "
+              << load_stats.Min() / 1000.0 << "/"
+              << load_stats.Mean() / 1000.0 << "/"
+              << load_stats.Max() / 1000.0 << " s" << std::endl;
   }
 }
 
