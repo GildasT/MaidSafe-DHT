@@ -142,8 +142,6 @@ void NodeImpl::Join(const NodeId &node_id,
     asymm::GenerateKeyPair(&key_pair);
     default_private_key_.reset(new asymm::PrivateKey(key_pair.private_key));
     default_public_key_.reset(new asymm::PublicKey(key_pair.public_key));
-  } else {
-    DLOG(INFO) << EncodeToHex(node_id.String());
   }
 
   if (!rpcs_) {

@@ -89,8 +89,7 @@ class NodeTest : public testing::Test {
       NodeContainerPtr;
   NodeTest()
       : env_(NodesEnvironment<Node>::g_environment()),
-        kTimeout_(transport::kDefaultInitialTimeout +
-                  transport::kDefaultInitialTimeout),
+        kTimeout_(transport::kDefaultInitialTimeout * 2),
         chosen_node_index_(RandomUint32() % env_->node_containers_.size()),
         chosen_container_(env_->node_containers_[chosen_node_index_]) {}
 
@@ -647,6 +646,10 @@ TEST_F(NodeTest, FUNC_Update) {
     chosen_container_->GetAndResetStoreResult(&result);
   }
   ASSERT_EQ(kSuccess, result);
+  // Sleep to allow remaining nodes to finish storing (store operation returns
+  // success after kMinSuccessfulPecentageStore * k have succeeded).  Can't
+  // access implementation to avoid arbitrary sleep here as this is API test.
+  Sleep(boost::posix_time::seconds(1));
 
   FindValueReturns find_value_returns;
   {
@@ -767,6 +770,10 @@ TEST_F(NodeTest, FUNC_Delete) {
     chosen_container_->GetAndResetStoreResult(&result);
   }
   ASSERT_EQ(kSuccess, result);
+  // Sleep to allow remaining nodes to finish storing (store operation returns
+  // success after kMinSuccessfulPecentageStore * k have succeeded).  Can't
+  // access implementation to avoid arbitrary sleep here as this is API test.
+  Sleep(boost::posix_time::seconds(1));
 
   {
     boost::mutex::scoped_lock lock(env_->mutex_);

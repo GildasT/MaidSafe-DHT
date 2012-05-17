@@ -27,6 +27,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MAIDSAFE_DHT_TESTS_LOCAL_NETWORK_H_
 #define MAIDSAFE_DHT_TESTS_LOCAL_NETWORK_H_
 
+#include <iostream>  // NOLINT (Fraser)
 #include <string>
 #include <utility>
 #include <vector>
@@ -113,6 +114,33 @@ void LocalNetwork<NodeType>::SetUp() {
       bootstrap_contacts.push_back(node_container->node()->contact());
     node_containers_.push_back(node_container);
     node_ids_.push_back(node_container->node()->contact().node_id());
+  }
+  // Lookup every other node to properly populate each node's routing table
+  auto begin_itr(node_containers_.begin());
+  for (; begin_itr != node_containers_.end() - 1; ++begin_itr) {
+    for (auto itr(begin_itr + 1); itr != node_containers_.end(); ++itr) {
+      boost::mutex::scoped_lock lock(mutex_);
+      (*begin_itr)->FindNodes((*itr)->node()->contact().node_id(), 0);
+      int result(kPendingResult);
+      std::vector<Contact> closest_nodes;
+      if (!cond_var_.timed_wait(lock,
+                                transport::kDefaultInitialTimeout * 2,
+                                (*begin_itr)->wait_for_find_nodes_functor())) {
+        std::cerr << DebugId((*begin_itr)->node()->contact())
+                  << " failed to wait while finding node "
+                  << DebugId((*itr)->node()->contact()) << std::endl;
+      }
+      (*begin_itr)->GetAndResetFindNodesResult(&result, &closest_nodes);
+      ASSERT_FALSE(closest_nodes.empty());
+      if (result != kSuccess ||
+          (*itr)->node()->contact() != closest_nodes[0]) {
+        std::cerr << DebugId((*begin_itr)->node()->contact())
+                  << " failed while finding node "
+                  << DebugId((*itr)->node()->contact()) << "   Result: "
+                  << result << "    Closest contact found: "
+                  << DebugId(closest_nodes[0]) << std::endl;
+      }
+    }
   }
 }
 
