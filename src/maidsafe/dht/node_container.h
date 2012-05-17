@@ -390,9 +390,9 @@ void NodeContainer<NodeType>::Init(
   // doesn't care if reply succeeds or not.
   if (!client_only_node) {
 //    listening_transport_.reset(
-//        new transport::TcpTransport(asio_service_.service()));
+//        new transport::RudpTransport(asio_service_.service()));
     listening_transport_.reset(
-        new transport::TcpTransport(asio_service_.service()));
+        new transport::RudpTransport(asio_service_.service()));
     listening_transport_->on_message_received()->connect(
         transport::OnMessageReceived::element_type::slot_type(
             &MessageHandler::OnMessageReceived, message_handler_.get(),
