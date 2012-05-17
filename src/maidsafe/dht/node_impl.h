@@ -517,7 +517,7 @@ class NodeImpl {
   std::shared_ptr<DataStore> data_store_;
   std::shared_ptr<Service> service_;
   std::shared_ptr<RoutingTable> routing_table_;
-  std::shared_ptr<Rpcs<transport::TcpTransport>> rpcs_;
+  std::shared_ptr<Rpcs<transport::RudpTransport>> rpcs_;
   asymm::GetPublicKeyAndValidationFunctor contact_validation_getter_;
   asymm::ValidatePublicKeyFunctor contact_validator_;
   asymm::ValidateFunctor validate_functor_;

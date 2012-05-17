@@ -31,6 +31,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <functional>
 #include <string>
 
+#include "boost/thread/shared_mutex.hpp"
+
 #include "maidsafe/transport/transport.h"
 #include "maidsafe/dht/data_store.h"
 

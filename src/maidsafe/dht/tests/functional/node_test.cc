@@ -47,9 +47,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "maidsafe/common/crypto.h"
 #include "maidsafe/transport/transport.h"
 #include "maidsafe/transport/rudp_transport.h"
-#include "maidsafe/transport/tcp_transport.h"
 #include "maidsafe/dht/log.h"
-// #include "maidsafe-dht/common/routing_table.h"
 #include "maidsafe/dht/config.h"
 #include "maidsafe/dht/node-api.h"
 #include "maidsafe/dht/node_impl.h"
@@ -341,7 +339,7 @@ TEST_F(NodeTest, FUNC_StoreAndFindBigValue) {
     chosen_container_->Store(kKey, kValue, "", bptime::pos_infin,
         PrivateKeyPtr(new asymm::PrivateKey(
             chosen_container_->key_pair()->private_key)));
-    EXPECT_TRUE(env_->cond_var_.timed_wait(lock, kTimeout_,
+    EXPECT_TRUE(env_->cond_var_.timed_wait(lock, kTimeout_ * 10,
                 chosen_container_->wait_for_store_functor()));
     chosen_container_->GetAndResetStoreResult(&result);
   }
@@ -353,7 +351,7 @@ TEST_F(NodeTest, FUNC_StoreAndFindBigValue) {
     chosen_container_->FindValue(kKey,
         PrivateKeyPtr(new asymm::PrivateKey(
             chosen_container_->key_pair()->private_key)));
-    EXPECT_TRUE(env_->cond_var_.timed_wait(lock, kTimeout_,
+    EXPECT_TRUE(env_->cond_var_.timed_wait(lock, kTimeout_ * 10,
                 chosen_container_->wait_for_find_value_functor()));
     chosen_container_->GetAndResetFindValueResult(&find_value_returns);
   }

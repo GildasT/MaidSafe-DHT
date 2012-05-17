@@ -176,9 +176,9 @@ bool DataStore::DeleteValue(
     const KeyValueSignature &key_value_signature,
     const RequestAndSignature &delete_request_and_signature,
     bool is_refresh) {
+  UpgradeLock upgrade_lock(shared_mutex_);
   KeyValueIndex::index<TagKeyValue>::type& index_by_key_value =
       key_value_index_->get<TagKeyValue>();
-  UpgradeLock upgrade_lock(shared_mutex_);
 
   // If the key and value doesn't exist, return true unless is_refresh is true,
   // in which case, add the data and mark it as deleted.
@@ -242,9 +242,9 @@ bool DataStore::GetValues(
     return false;
   values_and_signatures->clear();
 
+  SharedLock shared_lock(shared_mutex_);
   KeyValueIndex::index<TagKey>::type& index_by_key =
       key_value_index_->get<TagKey>();
-  SharedLock shared_lock(shared_mutex_);
   auto itr_pair = index_by_key.equal_range(key);
   if (itr_pair.first == itr_pair.second)
     return false;
@@ -263,6 +263,7 @@ bool DataStore::GetValues(
 }
 
 void DataStore::Refresh(std::vector<KeyValueTuple> *key_value_tuples) {
+  UniqueLock unique_lock(shared_mutex_);
   KeyValueIndex::index<TagExpireTime>::type& index_by_expire_time =
       key_value_index_->get<TagExpireTime>();
   KeyValueIndex::index<TagRefreshTime>::type& index_by_refresh_time =
@@ -271,7 +272,6 @@ void DataStore::Refresh(std::vector<KeyValueTuple> *key_value_tuples) {
       key_value_index_->get<TagConfirmTime>();
 
   // Remove expired values.
-  UniqueLock unique_lock(shared_mutex_);
   bptime::ptime now(bptime::microsec_clock::universal_time());
   auto it = index_by_confirm_time.begin();
   auto it_confirm_upper_bound = index_by_confirm_time.upper_bound(now);

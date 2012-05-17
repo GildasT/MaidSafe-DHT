@@ -33,7 +33,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "maidsafe/common/rsa.h"
 #include "maidsafe/common/utils.h"
 #include "maidsafe/transport/rudp_transport.h"
-#include "maidsafe/transport/tcp_transport.h"
 
 #include "maidsafe/dht/log.h"
 #include "maidsafe/dht/node_impl.h"
@@ -146,7 +145,7 @@ void NodeImpl::Join(const NodeId &node_id,
   }
 
   if (!rpcs_) {
-    rpcs_.reset(new Rpcs<transport::TcpTransport>(asio_service_,
+    rpcs_.reset(new Rpcs<transport::RudpTransport>(asio_service_,
                                                   default_private_key_));
   }
   // TODO(Fraser#5#): 2011-07-08 - Need to update code for local endpoints.

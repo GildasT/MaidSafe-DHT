@@ -698,8 +698,9 @@ class MockNodeImplTest : public RoutingTableManipulator, public testing::Test {
         cond_var_(),
         unique_lock_(mutex_),
         kTaskTimeout_(10) {
-    data_store_ = node_->data_store_;
     node_->joined_ = true;
+    node_->data_store_.reset(new DataStore(bptime::seconds(3600)));
+    data_store_ = node_->data_store_;
     node_->routing_table_ = routing_table_;
     local_node_->routing_table_ = routing_table_;
   }
@@ -836,10 +837,10 @@ TEST_F(MockNodeImplTest, BEH_GetBootstrapContacts) {
 TEST_F(MockNodeImplTest, BEH_GetContact) {
   bool done(false);
   PopulateRoutingTable(g_kKademliaK, 12);
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
                                             private_key_));
-  SetRpcs<transport::TcpTransport>(new_rpcs);
+  SetRpcs<transport::RudpTransport>(new_rpcs);
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return());
 
@@ -850,8 +851,8 @@ TEST_F(MockNodeImplTest, BEH_GetContact) {
   EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                    testing::_, testing::_))
       .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-          boost::bind(&MockRpcs<transport::TcpTransport>::FindNodeResponseClose,
-                    new_rpcs.get(), _1))));
+          boost::bind(&MockRpcs<transport::RudpTransport>::FindNodeResponseClose,
+                      new_rpcs.get(), _1))));
   {
     // All k populated contacts response with random closest list
     // (not greater than k)
@@ -879,7 +880,7 @@ TEST_F(MockNodeImplTest, BEH_GetContact) {
     // Ping success
     EXPECT_CALL(*new_rpcs, Ping(testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<2>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcPingFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcPingFunctor>,
             new_rpcs.get(), _1))));
     node_->GetContact(target_id, std::bind(&GetContactCallback, args::_1,
                                            args::_2, &result, &cond_var_,
@@ -911,10 +912,10 @@ TEST_F(MockNodeImplTest, BEH_PingOldestContact) {
   PopulateRoutingTable(g_kKademliaK, 12);
   PopulateRoutingTable(g_kKademliaK, 11);
 
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
                                              private_key_));
-  SetLocalRpcs<transport::TcpTransport>(new_rpcs);
+  SetLocalRpcs<transport::RudpTransport>(new_rpcs);
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return());
 
@@ -927,7 +928,7 @@ TEST_F(MockNodeImplTest, BEH_PingOldestContact) {
     // Ping success
     EXPECT_CALL(*new_rpcs, Ping(testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<2>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcPingFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcPingFunctor>,
             new_rpcs.get(), _1))));
     AddContact(routing_table_, new_contact, rank_info_);
 
@@ -943,7 +944,7 @@ TEST_F(MockNodeImplTest, BEH_PingOldestContact) {
     // Ping failed
     EXPECT_CALL(*new_rpcs, Ping(testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<2>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::NoResponse<RpcPingFunctor>,
+            &MockRpcs<transport::RudpTransport>::NoResponse<RpcPingFunctor>,
             new_rpcs.get(), _1))));
     AddContact(routing_table_, new_contact, rank_info_);
 
@@ -961,10 +962,10 @@ TEST_F(MockNodeImplTest, BEH_Join) {
   bool done(false);
   node_->joined_ = false;
   std::vector<Contact> bootstrap_contacts;
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
                                              private_key_));
-  SetRpcs<transport::TcpTransport>(new_rpcs);
+  SetRpcs<transport::RudpTransport>(new_rpcs);
   EXPECT_CALL(*new_rpcs, Ping(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return());
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
@@ -996,13 +997,13 @@ TEST_F(MockNodeImplTest, BEH_Join) {
     EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillOnce(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::FindValueNoResponse,
-                      new_rpcs.get(), _1))))
+            boost::bind(&MockRpcs<transport::RudpTransport>::FindValueNoResponse,
+                        new_rpcs.get(), _1))))
         .WillOnce(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::FindValueNoResponse,
-                      new_rpcs.get(), _1))))
+            boost::bind(&MockRpcs<transport::RudpTransport>::FindValueNoResponse,
+                        new_rpcs.get(), _1))))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindValueNoValueResponse,
+            &MockRpcs<transport::RudpTransport>::FindValueNoValueResponse,
             new_rpcs.get(), _1))));
     node_->Join(kHolderId(), bootstrap_contacts, callback);
     EXPECT_TRUE(cond_var_.timed_wait(unique_lock_, kTaskTimeout_,
@@ -1031,7 +1032,7 @@ TEST_F(MockNodeImplTest, BEH_Join) {
     EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindValueNoValueResponse,
+            &MockRpcs<transport::RudpTransport>::FindValueNoValueResponse,
             new_rpcs.get(), _1))));
     node_->Join(kHolderId(), bootstrap_contacts, callback);
     EXPECT_TRUE(cond_var_.timed_wait(unique_lock_, kTaskTimeout_,
@@ -1062,14 +1063,14 @@ TEST_F(MockNodeImplTest, BEH_Join) {
     EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillOnce(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::FindValueNoResponse,
-                      new_rpcs.get(), _1))))
+            boost::bind(&MockRpcs<transport::RudpTransport>::FindValueNoResponse,
+                        new_rpcs.get(), _1))))
         .WillOnce(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::FindValueNoResponse,
-                      new_rpcs.get(), _1))))
+            boost::bind(&MockRpcs<transport::RudpTransport>::FindValueNoResponse,
+                        new_rpcs.get(), _1))))
         .WillOnce(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::FindValueNoResponse,
-                      new_rpcs.get(), _1))));
+            boost::bind(&MockRpcs<transport::RudpTransport>::FindValueNoResponse,
+                        new_rpcs.get(), _1))));
     node_->Join(kHolderId(), bootstrap_contacts, callback);
     EXPECT_TRUE(cond_var_.timed_wait(unique_lock_, kTaskTimeout_,
                                      [&done]() { return done; }));  // NOLINT (Fraser)
@@ -1105,13 +1106,13 @@ TEST_F(MockNodeImplTest, BEH_Join) {
     EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindValueNoValueResponse,
+            &MockRpcs<transport::RudpTransport>::FindValueNoValueResponse,
             new_rpcs.get(), _1))));
     EXPECT_CALL(*new_rpcs, StoreRefresh(testing::_, testing::_, testing::_,
                                         testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::StoreRefreshCallback,
-                      new_rpcs.get(), _1))));
+            boost::bind(&MockRpcs<transport::RudpTransport>::StoreRefreshCallback,
+                        new_rpcs.get(), _1))));
     node_->Join(kHolderId(), bootstrap_contacts, callback);
     EXPECT_TRUE(cond_var_.timed_wait(unique_lock_, kTaskTimeout_,
                                      [&done]() { return done; }));  // NOLINT (Fraser)
@@ -1125,10 +1126,10 @@ TEST_F(MockNodeImplTest, BEH_Leave) {
   bool done(false);
   PopulateRoutingTable(g_kKademliaK, 12);
   std::vector<Contact> bootstrap_contacts;
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
                                             private_key_));
-  SetRpcs<transport::TcpTransport>(new_rpcs);
+  SetRpcs<transport::RudpTransport>(new_rpcs);
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return());
 
@@ -1153,7 +1154,7 @@ TEST_F(MockNodeImplTest, BEH_Leave) {
   EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                    testing::_, testing::_))
       .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-          &MockRpcs<transport::TcpTransport>::FindValueNoValueResponse,
+          &MockRpcs<transport::RudpTransport>::FindValueNoValueResponse,
           new_rpcs.get(), _1))));
   node_->Join(kHolderId(), bootstrap_contacts, callback);
   EXPECT_TRUE(cond_var_.timed_wait(unique_lock_, kTaskTimeout_,
@@ -1171,10 +1172,10 @@ TEST_F(MockNodeImplTest, BEH_Leave) {
 TEST_F(MockNodeImplTest, BEH_FindNodes) {
   bool done(false);
   PopulateRoutingTable(g_kKademliaK * 2, 12);
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
                                             private_key_));
-  SetRpcs<transport::TcpTransport>(new_rpcs);
+  SetRpcs<transport::RudpTransport>(new_rpcs);
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return());
 
@@ -1184,8 +1185,8 @@ TEST_F(MockNodeImplTest, BEH_FindNodes) {
     EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::FindNodeNoResponse,
-                      new_rpcs.get(), _1))));
+            boost::bind(&MockRpcs<transport::RudpTransport>::FindNodeNoResponse,
+                        new_rpcs.get(), _1))));
     std::vector<Contact> lcontacts;
     node_->FindNodes(key, std::bind(&FindNodeCallback, rank_info_, args::_1,
                                     args::_2, &mutex_, &cond_var_, &lcontacts,
@@ -1202,7 +1203,7 @@ TEST_F(MockNodeImplTest, BEH_FindNodes) {
     EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindNodeFirstNoResponse,
+            &MockRpcs<transport::RudpTransport>::FindNodeFirstNoResponse,
             new_rpcs.get(), _1))));
     std::vector<Contact> lcontacts;
     node_->FindNodes(key,
@@ -1221,7 +1222,7 @@ TEST_F(MockNodeImplTest, BEH_FindNodes) {
     EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindNodeFirstAndLastNoResponse,
+            &MockRpcs<transport::RudpTransport>::FindNodeFirstAndLastNoResponse,
             new_rpcs.get(), _1))));
     std::vector<Contact> lcontacts;
     node_->FindNodes(key,
@@ -1239,7 +1240,7 @@ TEST_F(MockNodeImplTest, BEH_FindNodes) {
     EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindNodeResponseNoClose,
+            &MockRpcs<transport::RudpTransport>::FindNodeResponseNoClose,
             new_rpcs.get(), _1))));
     std::vector<Contact> lcontacts;
     node_->FindNodes(key,
@@ -1261,9 +1262,9 @@ TEST_F(MockNodeImplTest, BEH_FindNodes) {
     // than k)
     EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
-        .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindNodeResponseClose,  //NOLINT
-                      new_rpcs.get(), _1))));
+        .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
+            boost::bind(&MockRpcs<transport::RudpTransport>::FindNodeResponseClose,  //NOLINT
+                        new_rpcs.get(), _1))));
     std::vector<Contact> lcontacts;
     node_->FindNodes(target_id,
                      std::bind(&FindNodeCallback, rank_info_, args::_1,
@@ -1310,7 +1311,7 @@ TEST_F(MockNodeImplTest, BEH_FindNodes) {
     EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindNodeResponseClose,
+            &MockRpcs<transport::RudpTransport>::FindNodeResponseClose,
                   new_rpcs.get(), _1))));
     std::vector<Contact> lcontacts;
     node_->FindNodes(target_id,
@@ -1332,7 +1333,7 @@ TEST_F(MockNodeImplTest, BEH_FindNodes) {
     EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<3, 4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindNodeRandomResponseClose,
+            &MockRpcs<transport::RudpTransport>::FindNodeRandomResponseClose,
             new_rpcs.get(), _1, _2))));
     std::vector<Contact> lcontacts;
     node_->FindNodes(target_id,
@@ -1382,10 +1383,10 @@ TEST_F(MockNodeImplTest, BEH_FindNodes) {
 TEST_F(MockNodeImplTest, BEH_Store) {
   bool done(false);
   PopulateRoutingTable(g_kKademliaK * 2, 12);
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
                                             private_key_));
-  SetRpcs<transport::TcpTransport>(new_rpcs);
+  SetRpcs<transport::RudpTransport>(new_rpcs);
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return());
 
@@ -1397,8 +1398,8 @@ TEST_F(MockNodeImplTest, BEH_Store) {
   EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                    testing::_, testing::_))
       .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-          boost::bind(&MockRpcs<transport::TcpTransport>::FindNodeResponseClose,
-                    new_rpcs.get(), _1))));
+          boost::bind(&MockRpcs<transport::RudpTransport>::FindNodeResponseClose,
+                      new_rpcs.get(), _1))));
   std::string key_str(kKeySizeBytes, -1);
   NodeId key = NodeId(key_str);
   asymm::Keys crypto_key_data;
@@ -1413,7 +1414,7 @@ TEST_F(MockNodeImplTest, BEH_Store) {
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcStoreFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcStoreFunctor>,
             new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Store(key, kvs.value, kvs.signature, old_ttl, private_key_,
@@ -1428,8 +1429,8 @@ TEST_F(MockNodeImplTest, BEH_Store) {
   EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                 testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(
-          boost::bind(&MockRpcs<transport::TcpTransport>::SingleDeleteResponse,
-                    new_rpcs.get(), _1, &cond_var_, g_kKademliaK))));
+          boost::bind(&MockRpcs<transport::RudpTransport>::SingleDeleteResponse,
+                      new_rpcs.get(), _1, &cond_var_, g_kKademliaK))));
   {
     // All k populated contacts response with random closest list
     // (not greater than k)
@@ -1439,7 +1440,7 @@ TEST_F(MockNodeImplTest, BEH_Store) {
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 LastSeveralNoResponse<RpcStoreFunctor>, new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Store(key, kvs.value, kvs.signature, old_ttl, private_key_,
@@ -1466,7 +1467,7 @@ TEST_F(MockNodeImplTest, BEH_Store) {
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 FirstSeveralNoResponse<RpcStoreFunctor>, new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Store(key, kvs.value, kvs.signature, old_ttl, private_key_,
@@ -1494,7 +1495,7 @@ TEST_F(MockNodeImplTest, BEH_Store) {
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 LastLessNoResponse<RpcStoreFunctor>, new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Store(key, kvs.value, kvs.signature, old_ttl, private_key_,
@@ -1514,13 +1515,13 @@ TEST_F(MockNodeImplTest, BEH_Store) {
     EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                       FindNodeSeveralResponseNoClose, new_rpcs.get(), _1))));
     EXPECT_CALL(*new_rpcs, Store(testing::_, testing::_, testing::_,
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 LastLessNoResponse<RpcStoreFunctor>, new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Store(key, kvs.value, kvs.signature, old_ttl, private_key_,
@@ -1537,10 +1538,10 @@ TEST_F(MockNodeImplTest, BEH_Store) {
 TEST_F(MockNodeImplTest, BEH_Delete) {
   bool done(false);
   PopulateRoutingTable(g_kKademliaK * 2, 12);
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
                                             private_key_));
-  SetRpcs<transport::TcpTransport>(new_rpcs);
+  SetRpcs<transport::RudpTransport>(new_rpcs);
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return());
 
@@ -1552,8 +1553,8 @@ TEST_F(MockNodeImplTest, BEH_Delete) {
   EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                    testing::_, testing::_))
       .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-          boost::bind(&MockRpcs<transport::TcpTransport>::FindNodeResponseClose,
-                    new_rpcs.get(), _1))));
+          boost::bind(&MockRpcs<transport::RudpTransport>::FindNodeResponseClose,
+                      new_rpcs.get(), _1))));
 
   std::string key_str(kKeySizeBytes, -1);
   NodeId key = NodeId(key_str);
@@ -1567,7 +1568,7 @@ TEST_F(MockNodeImplTest, BEH_Delete) {
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcDeleteFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcDeleteFunctor>,
             new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Delete(key, kvs.value, kvs.signature, private_key_,
@@ -1587,7 +1588,7 @@ TEST_F(MockNodeImplTest, BEH_Delete) {
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 LastSeveralNoResponse<RpcDeleteFunctor>, new_rpcs.get(), _1))));
     int response_code(0);
     node_->Delete(key, kvs.value, kvs.signature, private_key_,
@@ -1609,7 +1610,7 @@ TEST_F(MockNodeImplTest, BEH_Delete) {
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 FirstSeveralNoResponse<RpcDeleteFunctor>, new_rpcs.get(),
                 _1))));
     int response_code(-2);
@@ -1631,7 +1632,7 @@ TEST_F(MockNodeImplTest, BEH_Delete) {
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 LastLessNoResponse<RpcDeleteFunctor>, new_rpcs.get(),
                 _1))));
     int response_code(-2);
@@ -1649,12 +1650,12 @@ TEST_F(MockNodeImplTest, BEH_Delete) {
     EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                       FindNodeSeveralResponseNoClose, new_rpcs.get(), _1))));
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 LastLessNoResponse<RpcDeleteFunctor>, new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Delete(key, kvs.value, kvs.signature, private_key_,
@@ -1671,10 +1672,10 @@ TEST_F(MockNodeImplTest, BEH_Delete) {
 TEST_F(MockNodeImplTest, BEH_Update) {
   bool done(false);
   PopulateRoutingTable(g_kKademliaK, 12);
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
                                             private_key_));
-  SetRpcs<transport::TcpTransport>(new_rpcs);
+  SetRpcs<transport::RudpTransport>(new_rpcs);
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return());
 
@@ -1686,7 +1687,7 @@ TEST_F(MockNodeImplTest, BEH_Update) {
   EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                    testing::_, testing::_))
       .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-          boost::bind(&MockRpcs<transport::TcpTransport>::FindNodeResponseClose,
+          boost::bind(&MockRpcs<transport::RudpTransport>::FindNodeResponseClose,
                       new_rpcs.get(), _1))));
 
   std::string key_str(kKeySizeBytes, -1);
@@ -1703,13 +1704,13 @@ TEST_F(MockNodeImplTest, BEH_Update) {
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcDeleteFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcDeleteFunctor>,
             new_rpcs.get(), _1))));
     EXPECT_CALL(*new_rpcs, Store(testing::_, testing::_, testing::_,
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcStoreFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcStoreFunctor>,
             new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Update(key, kvs_new.value, kvs_new.signature,
@@ -1730,13 +1731,13 @@ TEST_F(MockNodeImplTest, BEH_Update) {
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcDeleteFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcDeleteFunctor>,
             new_rpcs.get(), _1))));
     EXPECT_CALL(*new_rpcs, Store(testing::_, testing::_, testing::_,
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 FirstSeveralNoResponse<RpcStoreFunctor>, new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Update(key, kvs_new.value, kvs_new.signature,
@@ -1759,13 +1760,13 @@ TEST_F(MockNodeImplTest, BEH_Update) {
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcDeleteFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcDeleteFunctor>,
             new_rpcs.get(), _1))));
     EXPECT_CALL(*new_rpcs, Store(testing::_, testing::_, testing::_,
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 LastSeveralNoResponse<RpcStoreFunctor>, new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Update(key, kvs_new.value, kvs_new.signature,
@@ -1788,13 +1789,13 @@ TEST_F(MockNodeImplTest, BEH_Update) {
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 LastSeveralNoResponse<RpcDeleteFunctor>, new_rpcs.get(), _1))));
     EXPECT_CALL(*new_rpcs, Store(testing::_, testing::_, testing::_,
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcStoreFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcStoreFunctor>,
             new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Update(key, kvs_new.value, kvs_new.signature,
@@ -1817,14 +1818,14 @@ TEST_F(MockNodeImplTest, BEH_Update) {
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                 FirstSeveralNoResponse<RpcDeleteFunctor>, new_rpcs.get(),
                 _1))));
     EXPECT_CALL(*new_rpcs, Store(testing::_, testing::_, testing::_,
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcStoreFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcStoreFunctor>,
             new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Update(key, kvs_new.value, kvs_new.signature,
@@ -1845,18 +1846,18 @@ TEST_F(MockNodeImplTest, BEH_Update) {
     EXPECT_CALL(*new_rpcs, FindNodes(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::
+            boost::bind(&MockRpcs<transport::RudpTransport>::
                       FindNodeSeveralResponseNoClose, new_rpcs.get(), _1))));
     EXPECT_CALL(*new_rpcs, Delete(testing::_, testing::_, testing::_,
                                   testing::_, testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<5>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcDeleteFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcDeleteFunctor>,
             new_rpcs.get(), _1))));
     EXPECT_CALL(*new_rpcs, Store(testing::_, testing::_, testing::_,
                                  testing::_, testing::_, testing::_,
                                  testing::_))
         .WillRepeatedly(testing::WithArgs<6>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::Response<RpcStoreFunctor>,
+            &MockRpcs<transport::RudpTransport>::Response<RpcStoreFunctor>,
             new_rpcs.get(), _1))));
     int response_code(-2);
     node_->Update(key, kvs_new.value, kvs_new.signature,
@@ -1875,10 +1876,10 @@ TEST_F(MockNodeImplTest, BEH_FindValue) {
   bool done(false);
   PopulateRoutingTable(g_kKademliaK * 2, 12);
   node_->joined_ = true;
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
-                                            private_key_));
-  SetRpcs<transport::TcpTransport>(new_rpcs);
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
+                                             private_key_));
+  SetRpcs<transport::RudpTransport>(new_rpcs);
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return());
 
@@ -1888,7 +1889,7 @@ TEST_F(MockNodeImplTest, BEH_FindValue) {
     EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::TcpTransport>::FindValueNoResponse,
+            boost::bind(&MockRpcs<transport::RudpTransport>::FindValueNoResponse,
                       new_rpcs.get(), _1))));
     FindValueReturns results;
     node_->FindValue(key, private_key_,
@@ -1911,7 +1912,7 @@ TEST_F(MockNodeImplTest, BEH_FindValue) {
     EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindValueResponseCloseOnly,
+            &MockRpcs<transport::RudpTransport>::FindValueResponseCloseOnly,
             new_rpcs.get(), _1))));
     FindValueReturns results;
     node_->FindValue(key, private_key_,
@@ -1934,9 +1935,9 @@ TEST_F(MockNodeImplTest, BEH_FindValue) {
     new_rpcs->respond_ = g_kAlpha + RandomUint32() % g_kKademliaK + 1;
     EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
-        .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindValueNthResponse,
-                      new_rpcs.get(), _1))));
+        .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
+            boost::bind(&MockRpcs<transport::RudpTransport>::FindValueNthResponse,
+                        new_rpcs.get(), _1))));
     FindValueReturns results;
     node_->FindValue(key, private_key_,
                      std::bind(&FindValueCallback, args::_1, &cond_var_,
@@ -1956,7 +1957,7 @@ TEST_F(MockNodeImplTest, BEH_FindValue) {
     EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindValueNoValueResponse,
+            &MockRpcs<transport::RudpTransport>::FindValueNoValueResponse,
             new_rpcs.get(), _1))));
     FindValueReturns results;
     node_->FindValue(key, private_key_,
@@ -1978,7 +1979,7 @@ TEST_F(MockNodeImplTest, BEH_FindValue) {
     EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                      testing::_, testing::_))
         .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(boost::bind(
-            &MockRpcs<transport::TcpTransport>::FindValueResponseCloseOnly,
+            &MockRpcs<transport::RudpTransport>::FindValueResponseCloseOnly,
                 new_rpcs.get(), _1))));
     FindValueReturns results;
     node_->FindValue(key, private_key_,
@@ -2037,10 +2038,10 @@ TEST_F(MockNodeImplTest, BEH_Getters) {
     // contact()
     EXPECT_EQ(Contact(), node_->contact());
   }
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
                                             private_key_));
-  SetLocalRpcs<transport::TcpTransport>(new_rpcs);
+  SetLocalRpcs<transport::RudpTransport>(new_rpcs);
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return());
   {
@@ -2495,20 +2496,20 @@ TEST_F(MockNodeImplTest, BEH_SendDownlist) {
   size_t expected_providers_count(0);
   // Mock Setup
   node_->joined_ = true;
-  std::shared_ptr<MockRpcs<transport::TcpTransport>> new_rpcs(
-      new MockRpcs<transport::TcpTransport>(asio_service_.service(),
+  std::shared_ptr<MockRpcs<transport::RudpTransport>> new_rpcs(
+      new MockRpcs<transport::RudpTransport>(asio_service_.service(),
                                             private_key_));
-  SetRpcs<transport::TcpTransport>(new_rpcs);
+  SetRpcs<transport::RudpTransport>(new_rpcs);
 
   EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                     testing::_, testing::_))
       .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-          std::bind(&MockRpcs<transport::TcpTransport>::FindValueNoResponse,
+          std::bind(&MockRpcs<transport::RudpTransport>::FindValueNoResponse,
                     new_rpcs.get(), args::_1))));
 
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::WithArgs<0, 2>(testing::Invoke(
-          std::bind(&MockRpcs<transport::TcpTransport>::SendDownlistMock,
+          std::bind(&MockRpcs<transport::RudpTransport>::SendDownlistMock,
                     new_rpcs.get(),
                     args::_1,
                     args::_2,

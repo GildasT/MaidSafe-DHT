@@ -1512,7 +1512,7 @@ REGISTER_TYPED_TEST_CASE_P(RpcsTest,
                            FUNC_DeleteRefreshMultipleRequests);
 
 typedef ::testing::Types<transport::RudpTransport,
-                         transport::TcpTransport,
+                         transport::RudpTransport,
                          transport::UdpTransport> TransportTypes;
 INSTANTIATE_TYPED_TEST_CASE_P(TheRpcTests, RpcsTest, TransportTypes);
 

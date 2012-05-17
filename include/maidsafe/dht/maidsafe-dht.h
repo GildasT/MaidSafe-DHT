@@ -30,7 +30,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "maidsafe/transport/transport.h"
 #include "maidsafe/transport/message_handler.h"
-#include "maidsafe/transport/tcp_transport.h"
+#include "maidsafe/transport/rudp_transport.h"
 #include "maidsafe/transport/udp_transport.h"
 
 #include "maidsafe/dht/kademlia/node-api.h"
