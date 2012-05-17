@@ -696,8 +696,9 @@ class MockNodeImplTest : public RoutingTableManipulator, public testing::Test {
         cond_var_(),
         unique_lock_(mutex_),
         kTaskTimeout_(10) {
-    data_store_ = node_->data_store_;
     node_->joined_ = true;
+    node_->data_store_.reset(new DataStore(bptime::seconds(3600)));
+    data_store_ = node_->data_store_;
     node_->routing_table_ = routing_table_;
     local_node_->routing_table_ = routing_table_;
   }

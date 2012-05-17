@@ -750,37 +750,6 @@ TEST_P(NodeImplTest, FUNC_FindValue) {
 //  }
 }
 
-// Stress test to ensure that FindNodes always executes callback.
-TEST_P(NodeImplTest, FUNC_RecurringFindNonExistentNode) {
-  NodeId nonexistent_node(NodeId::kRandomId);
-  boost::mutex::scoped_lock lock(env_->mutex_);
-  int count(0);
-  for (int i(0); i != 100; ++i) {
-    test_container_->node()->FindNodes(
-        nonexistent_node,
-        [&count](int, std::vector<Contact>) {
-            DLOG(ERROR) << "Called " << ++count << " times."; });  // NOLINT (Fraser)
-  }
-
-  int timeout(30), current(0);
-  while ((count != 100) && (current++ < timeout))
-    Sleep(boost::posix_time::seconds(1));
-  ASSERT_EQ(100, count);
-
-  test_container_->set_find_nodes_functor(
-      [&count](int, std::vector<Contact>) {
-          DLOG(ERROR) << "Called " << ++count << " times."; });  // NOLINT (Fraser)
-  count = current = 0;
-
-  for (int i(0); i != 100; ++i)
-    test_container_->FindNodes(nonexistent_node);
-
-  while ((count != 100) && (current++ < timeout))
-    Sleep(boost::posix_time::seconds(1));
-
-  ASSERT_EQ(100, count);
-}
-
 TEST_P(NodeImplTest, FUNC_Delete) {
   int result(kPendingResult);
   FindValueReturns find_value_returns;
