@@ -202,8 +202,6 @@ void NodeImpl::Join(const NodeId &node_id,
                         std::bind(&NodeImpl::JoinFindValueCallback, this,
                                   args::_1, bootstrap_contacts, node_id,
                                   callback, true)));
-
-  DLOG(INFO) << "Before StartLookup";
   StartLookup(find_value_args);
 }
 
@@ -1556,8 +1554,26 @@ void NodeImpl::PingOldestContactCallback(Contact oldest_contact,
   HandleRpcCallback(oldest_contact, oldest_rank_info, result);
   if (result != kSuccess) {
     // Try to add the new contact again in case the oldest was removed
-    routing_table_->AddContact(replacement_contact, replacement_rank_info);
-    routing_table_->SetValidated(replacement_contact.node_id(), true);
+    int add_result(
+        routing_table_->AddContact(replacement_contact, replacement_rank_info));
+    if (add_result == kSuccess) {
+      routing_table_->SetValidated(replacement_contact.node_id(), true);
+      DLOG(WARNING) << "Old contact " << DebugId(oldest_contact)
+                    << " failed with code " << result << " to reply to ping.  "
+                    << DebugId(replacement_contact)
+                    << " has been added to routing table.";
+    } else {
+      DLOG(WARNING) << "Old contact " << DebugId(oldest_contact)
+                    << " failed with code " << result << " to reply to ping.  "
+                    << "Replacement " << DebugId(replacement_contact)
+                    << " failed with code " << add_result
+                    << " to be added to routing table.";
+    }
+  } else {
+    DLOG(WARNING) << "Old contact " << DebugId(oldest_contact)
+                  << " successfully replied to ping.  "
+                  << DebugId(replacement_contact)
+                  << " has not been added to routing table.";
   }
 }
 
@@ -1658,6 +1674,12 @@ void NodeImpl::set_check_cache_functor(
   if (service_)
     service_->set_check_cache_functor(check_cache_functor);
 }
+
+#ifndef NDEBUG
+void NodeImpl::PrintRoutingTable() const {
+  routing_table_->PrintAll();
+}
+#endif
 
 
 }  // namespace dht

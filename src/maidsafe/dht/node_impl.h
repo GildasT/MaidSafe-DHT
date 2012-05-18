@@ -232,6 +232,10 @@ class NodeImpl {
 
   uint16_t k() const { return k_; }
 
+#ifndef NDEBUG
+  void PrintRoutingTable() const;
+#endif
+
   friend class NodeContainer<maidsafe::dht::NodeImpl>;
   friend class test::NodeImplTest;
   friend class test::MockNodeImplTest;

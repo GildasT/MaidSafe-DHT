@@ -32,6 +32,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <vector>
 
+#include "maidsafe/common/test.h"
+
 #include "maidsafe/dht/node_container.h"
 #include "maidsafe/dht/node_id.h"
 #include "maidsafe/dht/version.h"
@@ -115,6 +117,7 @@ void LocalNetwork<NodeType>::SetUp() {
     node_containers_.push_back(node_container);
     node_ids_.push_back(node_container->node()->contact().node_id());
   }
+
   // Lookup every other node to properly populate each node's routing table
   auto begin_itr(node_containers_.begin());
   for (; begin_itr != node_containers_.end() - 1; ++begin_itr) {
@@ -142,10 +145,33 @@ void LocalNetwork<NodeType>::SetUp() {
       }
     }
   }
+#ifndef NDEBUG
+  size_t expected_routing_table_size(node_containers_.size() - 1);
+  std::for_each(
+      node_containers_.begin(),
+      node_containers_.end(),
+      [expected_routing_table_size]
+          (std::shared_ptr<maidsafe::dht::NodeContainer<NodeType>> container) {
+    std::vector<Contact> contacts;
+    container->node()->GetAllContacts(&contacts);
+    if (contacts.size() != expected_routing_table_size)
+      container->node()->PrintRoutingTable();
+  });
+#endif
 }
 
 template <typename NodeType>
 void LocalNetwork<NodeType>::TearDown() {
+#ifndef NDEBUG
+  if (testing::UnitTest::GetInstance()->failed_test_count() != 0) {
+    std::for_each(
+        node_containers_.begin(),
+        node_containers_.end(),
+        [](std::shared_ptr<maidsafe::dht::NodeContainer<NodeType>> container) {
+      container->node()->PrintRoutingTable();
+    });
+  }
+#endif
   for (auto it(node_containers_.begin()); it != node_containers_.end(); ++it)
     (*it)->Stop(nullptr);
   test_root_.reset();

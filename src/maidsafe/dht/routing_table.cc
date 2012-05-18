@@ -92,7 +92,8 @@ RoutingTable::RoutingTable(const NodeId &this_id, const uint16_t &k)
       validate_contact_(),
       ping_down_contact_(),
       own_bucket_index_(0),
-      mutex_() {
+      mutex_(),
+      always_add_limit_(8U * k_) {
   contacts_.reserve(35 * k);
 }
 
@@ -241,6 +242,10 @@ int RoutingTable::SetValidated(const NodeId &node_id, bool validated) {
 
 void RoutingTable::InsertContact(
     const RoutingTableContact &contact_to_insert) {
+  // TODO(Fraser#5#): 2012-05-18 - Confirm we want to keep this if block below.
+  if (contacts_.size() < always_add_limit_)
+    return contacts_.push_back(contact_to_insert);
+
   // Get the new contact's fellow k-bucket contacts.  All contacts with k-bucket
   // index >= own_bucket_index_ are effectively in the holder's own k-bucket.
   auto bucket_end_itr(
@@ -305,6 +310,10 @@ void RoutingTable::InsertContact(
                        const RoutingTableContact &rhs) {
     return lhs.last_seen > rhs.last_seen;
   });
+  DLOG(WARNING) << "K-Bucket " << contact_to_insert.k_bucket_index
+                << " full.  Pinging " << DebugId((*contacts_.begin()).contact)
+                << " to decide if " << DebugId(contact_to_insert.contact)
+                << " can replace it.";
   ping_oldest_contact_((*contacts_.begin()).contact,
                        contact_to_insert.contact,
                        contact_to_insert.rank_info);
@@ -371,6 +380,31 @@ ValidateContact& RoutingTable::validate_contact() {
 PingDownContact& RoutingTable::ping_down_contact() {
   return ping_down_contact_;
 }
+
+#ifndef NDEBUG
+void RoutingTable::PrintAll() {
+  boost::mutex::scoped_lock lock(mutex_);
+  std::sort(contacts_.begin(),
+            contacts_.end(),
+            [](const RoutingTableContact &lhs,
+               const RoutingTableContact &rhs) {
+    return lhs.contact.node_id() < rhs.contact.node_id();
+  });
+  std::cout << std::endl << "Routing table contents for Node " << kDebugId_
+            << " (Total size: " << contacts_.size() << ")\n";
+  std::cout << "\t       ID        | K-Bucket | Failed RPCs | Last Seen Time\n";
+  std::for_each(contacts_.begin(),
+                contacts_.end(),
+                [](const RoutingTableContact &rt_contact) {
+    std::cout << '\t' << DebugId(rt_contact.contact) << " |    "
+              << rt_contact.k_bucket_index << "     |     "
+              << (rt_contact.k_bucket_index < 10 ? " " : "")
+              << rt_contact.num_failed_rpcs << "      | "
+              << rt_contact.last_seen << std::endl;
+  });
+  std::cout << std::endl;
+}
+#endif
 
 }  // namespace dht
 

@@ -253,6 +253,10 @@ class Node {
   bool client_only_node() const;
   uint16_t k() const;
 
+#ifndef NDEBUG
+  void PrintRoutingTable() const;
+#endif
+
  private:
   std::unique_ptr<NodeImpl> pimpl_;
 };

@@ -143,6 +143,10 @@ class RoutingTable {
    *  @return The ping_down_contact_ signal. */
   PingDownContact& ping_down_contact();
 
+#ifndef NDEBUG
+  void PrintAll();
+#endif
+
   friend class test::RoutingTableManipulator;
 
  private:
@@ -185,6 +189,7 @@ class RoutingTable {
   PingDownContact ping_down_contact_;
   int own_bucket_index_;
   boost::mutex mutex_;
+  size_t always_add_limit_;
 };
 
 }  // namespace dht

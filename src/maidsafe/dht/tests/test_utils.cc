@@ -97,6 +97,7 @@ RoutingTableManipulator::RoutingTableManipulator(uint16_t k)
     : contact_(),
       routing_table_(new RoutingTable(NodeId(NodeId::kRandomId), k)),
       generated_ids_() {
+  routing_table_->always_add_limit_ = 0;
   generated_ids_.push_back(routing_table_->kThisId_);
 }
 
@@ -146,7 +147,7 @@ NodeId RoutingTableManipulator::GenerateUniqueRandomId(
 }
 
 Contact RoutingTableManipulator::ComposeContact(const NodeId &node_id,
-                                               const Port &port) {
+                                                const Port &port) {
   transport::Endpoint end_point("127.0.0.1", port);
   std::vector<transport::Endpoint> local_endpoints(1, end_point);
   Contact contact(node_id, end_point, local_endpoints, end_point, false,

@@ -137,7 +137,17 @@ class RoutingTableTest : public RoutingTableManipulator,
 
 class RoutingTableSingleKTest : public RoutingTableTest {
  public:
-  RoutingTableSingleKTest() : RoutingTableTest() {}
+  RoutingTableSingleKTest()
+      : RoutingTableTest(),
+        kOriginalLoggingLevel_(FLAGS_ms_logging_dht) {}
+ protected:
+  void SetUp() {
+    FLAGS_ms_logging_dht = google::FATAL;
+  }
+  void TearDown() {
+    FLAGS_ms_logging_dht = kOriginalLoggingLevel_;
+  }
+  const int kOriginalLoggingLevel_;
 };
 
 

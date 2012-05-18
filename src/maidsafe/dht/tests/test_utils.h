@@ -75,10 +75,13 @@ class AsymGetPublicKeyAndValidation {
 
 typedef std::shared_ptr<AsymGetPublicKeyAndValidation> AsymGPKPtr;
 
+// NOTE: The default routing table insertion policy where all new contacts are
+// added until the table size hits 8 * k_ is disabled by this class.
 class RoutingTableManipulator {
  public:
   explicit RoutingTableManipulator(uint16_t k);
   virtual ~RoutingTableManipulator() {}
+  NodeId kHolderId() const { return routing_table_->kThisId_; }
 
  protected:
   // Generates a random ID which has not previously been created via this class
@@ -90,9 +93,11 @@ class RoutingTableManipulator {
   Contact ComposeContactWithKey(const NodeId &node_id,
                                 const Port &port,
                                 const asymm::Keys &crypto_key);
-  // Populates the routing table with "count" contacts.  If common_leading_bits
+  // Tries to add "count" contacts to the routing table.  If common_leading_bits
   // is >= 0, then all contacts added will have that number of leading bits in
-  // common with holder's ID.
+  // common with holder's ID.  This means that they will all fall in the range
+  // of a single k-bucket, and depending on the state of the routing table, may
+  // mean that no new contacts are actually added.
   void PopulateRoutingTable(int count, int common_leading_bits = -1);
   void GetContact(const NodeId &node_id, Contact *contact);
   std::vector<RoutingTableContact> GetContacts() const;
@@ -100,7 +105,6 @@ class RoutingTableManipulator {
       const NodeId &node_id,
       RoutingTableContact &routing_table_contact) const;
   RoutingTable::UnvalidatedContacts GetUnvalidatedContacts() const;
-  NodeId kHolderId() const { return routing_table_->kThisId_; }
   int own_bucket_index() { return routing_table_->own_bucket_index_; }
   void Reset();
 

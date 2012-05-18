@@ -1400,9 +1400,11 @@ TEST_P(NodeImplTest, FUNC_StoreRefreshInvalidSigner) {
         not_refreshed = true;
     }
   }
+
   if (!not_refreshed) {
     std::cout << "\n\n=======================================================\n"
-              << "kNumValues: " << kNumValues << std::endl;
+              << "kNumValues: " << kNumValues << "  Node doing refresh: "
+              << DebugId((*refresh_node)->node()->contact()) << std::endl;
     for (itr = env_->node_containers_.begin();
          itr != env_->node_containers_.end(); ++itr) {
       std::cout << "Assessing " << DebugId((*itr)->node()->contact()) << '\t'

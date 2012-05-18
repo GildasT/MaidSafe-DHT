@@ -172,6 +172,12 @@ uint16_t Node::k() const {
   return pimpl_->k();
 }
 
+#ifndef NDEBUG
+void Node::PrintRoutingTable() const {
+  pimpl_->PrintRoutingTable();
+}
+#endif
+
 }  // namespace dht
 
 }  // namespace maidsafe
