@@ -2504,17 +2504,16 @@ TEST_F(MockNodeImplTest, BEH_SendDownlist) {
   EXPECT_CALL(*new_rpcs, FindValue(testing::_, testing::_, testing::_,
                                     testing::_, testing::_))
       .WillRepeatedly(testing::WithArgs<4>(testing::Invoke(
-          std::bind(&MockRpcs<transport::RudpTransport>::FindValueNoResponse,
-                    new_rpcs.get(), args::_1))));
+          boost::bind(&MockRpcs<transport::RudpTransport>::FindValueNoResponse,
+                      new_rpcs.get(), _1))));
 
   EXPECT_CALL(*new_rpcs, Downlist(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::WithArgs<0, 2>(testing::Invoke(
-          std::bind(&MockRpcs<transport::RudpTransport>::SendDownlistMock,
-                    new_rpcs.get(),
-                    args::_1,
-                    args::_2,
-                    &expected_provider_list,
-                    &downlist_call_count))));
+          boost::bind(&MockRpcs<transport::RudpTransport>::SendDownlistMock,
+                      new_rpcs.get(),
+                      _1, _2,
+                      &expected_provider_list,
+                      &downlist_call_count))));
   Downlist downlist(std::bind(static_cast<bool(*)(const Contact&,  // NOLINT (Viv)
                      const Contact&, const NodeId&)>(&CloserToTarget),
                      args::_1, args::_2, kHolderId()));

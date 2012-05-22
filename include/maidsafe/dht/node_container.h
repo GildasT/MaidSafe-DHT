@@ -224,7 +224,7 @@ class NodeContainer {
 
  protected:
   AsioService asio_service_;
-  std::shared_ptr<transport::TcpTransport> listening_transport_;
+  std::shared_ptr<transport::RudpTransport> listening_transport_;
   MessageHandlerPtr message_handler_;
   KeyPairPtr key_pair_;
   std::shared_ptr<NodeType> node_;
