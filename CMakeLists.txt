@@ -105,23 +105,13 @@ ms_add_executable(TESTnode_churn "Tests/DHT" ${SOURCE_FILES_DHT_TESTS_FUNCTIONAL
 ms_add_executable(KademliaDemo Demos ${ALL_FILES_DEMO_DIR})
 ms_add_executable(KademliaBenchmark Benchmarks ${ALL_FILES_BENCHMARK_DIR})
 
-# This target allows maidsafe_dht to be installed without building all project targets
-if(MSVC)
-  add_custom_target(install_dht_fast ${CMAKE_COMMAND} -DBUILD_TYPE=$<CONFIGURATION> -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
-else()
-  add_custom_target(install_dht_fast ${CMAKE_COMMAND} -DBUILD_TYPE=${CMAKE_BUILD_TYPE} -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
-endif()
-add_dependencies(install_dht_fast maidsafe_dht)
-set_target_properties(install_dht_fast PROPERTIES FOLDER "MaidSafe")
-
-
 target_link_libraries(maidsafe_dht maidsafe_transport)
 target_link_libraries(TESTkademlia maidsafe_dht)
 target_link_libraries(TESTnode_functional maidsafe_dht)
 target_link_libraries(TESTnode_impl_functional maidsafe_dht)
 target_link_libraries(TESTnode_churn maidsafe_dht)
-target_link_libraries(KademliaDemo maidsafe_dht boost_program_options-static)
-target_link_libraries(KademliaBenchmark maidsafe_dht boost_program_options-static)
+target_link_libraries(KademliaDemo maidsafe_dht ${BoostProgramOptionsLibs})
+target_link_libraries(KademliaBenchmark maidsafe_dht ${BoostProgramOptionsLibs})
 rename_outdated_built_exes()
 
 

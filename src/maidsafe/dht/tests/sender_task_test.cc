@@ -102,7 +102,7 @@ class SenderTaskTest: public testing::Test {
  protected:
   // Dummy function to imitate Securifier::GetPublicKeyAndValidation
   void GetPublicKeyAndValidation(
-      const std::string &public_key_id,
+      const std::string &/*public_key_id*/,
       asymm::GetPublicKeyAndValidationCallback callback) {
     asio_thread_group_.create_thread([callback] {
         // Imitating delay in lookup for kNetworkDelay milliseconds
