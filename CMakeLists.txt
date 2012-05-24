@@ -164,6 +164,7 @@ add_gtests(TESTnode_functional)
 add_gtests(TESTnode_impl_functional)
 add_gtests(TESTnode_churn)
 
+add_project_experimental()
 test_summary_output()
 
 # Remove most lengthy tests and style checkers from MemCheck runs.
