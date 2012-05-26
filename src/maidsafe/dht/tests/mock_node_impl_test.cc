@@ -50,6 +50,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "maidsafe/dht/contact.h"
 #include "maidsafe/dht/data_store.h"
+#include "maidsafe/dht/log.h"
 #include "maidsafe/dht/message_handler.h"
 #include "maidsafe/dht/node_id.h"
 #include "maidsafe/dht/node_impl.h"
