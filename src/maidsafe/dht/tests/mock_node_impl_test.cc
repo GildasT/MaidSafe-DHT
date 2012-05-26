@@ -27,7 +27,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "maidsafe/dht/node-api.h"
-#include <bitset>
+#include <bitset>  // NOLINT
 
 #include "boost/lexical_cast.hpp"
 #ifdef __MSVC__
