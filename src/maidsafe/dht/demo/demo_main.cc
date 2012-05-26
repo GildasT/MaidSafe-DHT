@@ -49,7 +49,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "maidsafe/dht/node_id.h"
 #include "maidsafe/dht/return_codes.h"
 #include "maidsafe/dht/utils.h"
-#include "maidsafe/dht/version.h"
 
 
 namespace bptime = boost::posix_time;
@@ -175,7 +174,6 @@ int main(int argc, char **argv) {
     po::options_description options_description("Options");
     options_description.add_options()
         ("help,h", "Print options.")
-        ("version,V", "Print program version.")
         ("logfile,l", po::value(&logfile), "Path of log file.")
         ("verbose,v", po::bool_switch(), "Verbose logging to console and file.")
 //        ("kadconfigfile,g",
@@ -226,13 +224,6 @@ int main(int argc, char **argv) {
 
     if (variables_map.count("help")) {
       std::cout << options_description << std::endl;
-      return 0;
-    }
-
-    if (variables_map.count("version")) {
-      std::cout << "MaidSafe-DHT "
-                << maidsafe::GetMaidSafeVersion(MAIDSAFE_DHT_VERSION)
-                << std::endl;
       return 0;
     }
 

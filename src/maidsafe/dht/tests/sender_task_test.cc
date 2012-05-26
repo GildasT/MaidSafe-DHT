@@ -102,17 +102,13 @@ class SenderTaskTest: public testing::Test {
  protected:
   // Dummy function to imitate Securifier::GetPublicKeyAndValidation
   void GetPublicKeyAndValidation(
-      const std::string & public_key_id,
+      const std::string &/*public_key_id*/,
       asymm::GetPublicKeyAndValidationCallback callback) {
-    asio_thread_group_.create_thread(std::bind(&SenderTaskTest::DummyFind,
-                                               this, public_key_id, callback));
-  }
-
-  void DummyFind(const std::string&,
-                 asymm::GetPublicKeyAndValidationCallback callback) {
-    // Imitating delay in lookup for kNetworkDelay milliseconds
-    Sleep(boost::posix_time::milliseconds(kNetworkDelay));
-    callback(asymm::PublicKey(), "");
+    asio_thread_group_.create_thread([callback] {
+        // Imitating delay in lookup for kNetworkDelay milliseconds
+        Sleep(boost::posix_time::milliseconds(kNetworkDelay));
+        callback(asymm::PublicKey(), "");
+    });
   }
 
   transport::Info info_;
@@ -279,33 +275,29 @@ TEST_F(SenderTaskTest, FUNC_SenderTaskCallbackMultiThreaded) {
     asymm::GenerateKeyPair(&  crypto_key_data);
     KeyValueSignature kvs = MakeKVS(crypto_key_data, 1024, "", "");
     kvs_vector.push_back(kvs);
-    asio_thread_group_.create_thread(std::bind(&SenderTask::AddTask,
-                                               sender_task_, kvs,
-                                               info_, request_signature,
-                                               "public_key_id_3", task_cb_1,
-                                               &is_new_id));
+    asio_thread_group_.create_thread([&] {
+        sender_task_->AddTask(kvs, info_, request_signature, "public_key_id_3", task_cb_1,
+                              &is_new_id);
+    });
     asymm::GenerateKeyPair(&  crypto_key_data);
     kvs = MakeKVS(crypto_key_data, 1024, "", "");
     kvs_vector.push_back(kvs);
-    asio_thread_group_.create_thread(std::bind(&SenderTask::AddTask,
-                                               sender_task_, kvs,
-                                               info_, request_signature,
-                                               "public_key_id_4", task_cb_2,
-                                               &is_new_id));
+    asio_thread_group_.create_thread([&] {
+        sender_task_->AddTask(kvs, info_, request_signature, "public_key_id_4", task_cb_2,
+                              &is_new_id);
+    });
   }
   asio_thread_group_.join_all();
 
   // Calling SenderTaskCallback
-  asio_thread_group_.create_thread(std::bind(&SenderTask::SenderTaskCallback,
-                                             sender_task_,
-                                             "public_key_id_1",
-                                             asymm::PublicKey(),
-                                             "public_key_validation"));
-  asio_thread_group_.create_thread(std::bind(&SenderTask::SenderTaskCallback,
-                                             sender_task_,
-                                             "public_key_id_2",
-                                             asymm::PublicKey(),
-                                             "public_key_validation"));
+  asio_thread_group_.create_thread([&] {
+      sender_task_->SenderTaskCallback("public_key_id_1", asymm::PublicKey(),
+                                       "public_key_validation");
+  });
+  asio_thread_group_.create_thread([&] {
+      sender_task_->SenderTaskCallback("public_key_id_2", asymm::PublicKey(),
+                                       "public_key_validation");
+  });
   asio_thread_group_.join_all();
 
   EXPECT_EQ(20u , count_callback_1_);
@@ -325,3 +317,4 @@ TEST_F(SenderTaskTest, FUNC_SenderTaskCallbackMultiThreaded) {
 }  // namespace dht
 
 }  // namespace maidsafe
+

@@ -143,7 +143,7 @@ class RpcsTest : public RoutingTableManipulator, public testing::Test {
     rpcs_key_pair_.reset(new asymm::Keys(key_pair));
     rpcs_= std::shared_ptr<Rpcs<T>>(new Rpcs<T>( // NOLINT (Fraser)
         asio_service_.service(),
-        GetPrivateKeyPtr(rpcs_key_pair_)));
+        this->GetPrivateKeyPtr(rpcs_key_pair_)));
     rpcs_contact_ = ComposeContactWithKey(rpcs_node_id,
                                           5010,
                                           sender_crypto_key_id_);
@@ -175,11 +175,11 @@ class RpcsTest : public RoutingTableManipulator, public testing::Test {
     service_ = std::shared_ptr<Service>(new Service(
         routing_table_,
         data_store_,
-        GetPrivateKeyPtr(service_key_pair_),
+        this->GetPrivateKeyPtr(service_key_pair_),
         g_kKademliaK));
     service_->set_node_joined(true);
     service_->set_node_contact(service_contact_);
-    handler_.reset(new MessageHandler(GetPrivateKeyPtr(service_key_pair_)));
+    handler_.reset(new MessageHandler(this->GetPrivateKeyPtr(service_key_pair_)));
     service_->ConnectToSignals(handler_);
     transport_->on_message_received()->connect(
         transport::OnMessageReceived::element_type::slot_type(
@@ -332,7 +332,7 @@ class RpcsTest : public RoutingTableManipulator, public testing::Test {
   static asymm::Keys receiver_crypto_key_id_;
   RankInfoPtr rank_info_;
   std::vector<Contact> contacts_;
-  TransportPtr transport_;
+  std::shared_ptr<T> transport_;
   MessageHandlerPtr handler_;
 };
 
@@ -1585,7 +1585,7 @@ class RpcsMultiServerNodesTest : public RoutingTableManipulator,
       rpcs_key_pair_.push_back(KeyPairPtr(new asymm::Keys(key_pair)));
       rpcs_.push_back(std::shared_ptr<Rpcs<T>>(               // NOLINT (Fraser)
           new Rpcs<T>(asio_services_[index]->service(),
-                      GetPrivateKeyPtr(rpcs_key_pair_[index]))));
+                      this->GetPrivateKeyPtr(rpcs_key_pair_[index]))));
 
       Contact rpcs_contact;
       rpcs_contact = ComposeContactWithKey(rpcs_node_id,
@@ -1609,20 +1609,21 @@ class RpcsMultiServerNodesTest : public RoutingTableManipulator,
       services_securifier_.push_back(KeyPairPtr(new asymm::Keys(key_pair)));
       service_.push_back(
           ServicePtr(new Service(routing_table_[index], data_store_[index],
-                                 GetPrivateKeyPtr(services_securifier_[index]),
-                                 g_kKademliaK)));
+                         this->GetPrivateKeyPtr(services_securifier_[index]),
+                         g_kKademliaK)));
       service_[index]->set_node_contact(service_contact_[index]);
       service_[index]->set_node_joined(true);
-      transport_.push_back(TransportPtr(new T(local_asios_[index]->service())));
+      transport_.push_back(std::shared_ptr<T>(
+          new T(local_asios_[index]->service())));
       handler_.push_back(
           MessageHandlerPtr(new MessageHandler(
-              GetPrivateKeyPtr(services_securifier_[index]))));
+              this->GetPrivateKeyPtr(services_securifier_[index]))));
       service_[index]->ConnectToSignals(handler_[index]);
       transport_[index]->on_message_received()->connect(
           transport::OnMessageReceived::element_type::slot_type(
               &MessageHandler::OnMessageReceived, handler_[index].get(),
               _1, _2, _3, _4).track_foreign(handler_[index]));
-      EXPECT_EQ(kSuccess,
+      EXPECT_EQ(transport::kSuccess,
                 transport_[index]->StartListening(
                                        service_contact_[index].endpoint()));
     }
@@ -1675,7 +1676,7 @@ class RpcsMultiServerNodesTest : public RoutingTableManipulator,
     *response_code = kGeneralError;
 
     rpcs_[index]->FindValue(key, g_kKademliaK,
-                            GetPrivateKeyPtr(rpcs_key_pair_[index]),
+                            this->GetPrivateKeyPtr(rpcs_key_pair_[index]),
                             service_contact_[server_index],
                             std::bind(&TestFindValueCallback, args::_1,
                                       args::_2, args::_3, args::_4, args::_5,
@@ -1692,7 +1693,7 @@ class RpcsMultiServerNodesTest : public RoutingTableManipulator,
     ldone = false;
     *response_code = kGeneralError;
     rpcs_[index]->Store(key, kvs.value, kvs.signature, ttl,
-                        GetPrivateKeyPtr(rpcs_key_pair_[index]),
+                        this->GetPrivateKeyPtr(rpcs_key_pair_[index]),
                         service_contact_[server_index],
                         std::bind(&TestCallback, args::_1, args::_2, &ldone,
                                   response_code));
@@ -1708,7 +1709,7 @@ class RpcsMultiServerNodesTest : public RoutingTableManipulator,
     ldone = false;
     *response_code = kGeneralError;
     rpcs_[index]->FindValue(key, g_kKademliaK,
-                            GetPrivateKeyPtr(rpcs_key_pair_[index]),
+                            this->GetPrivateKeyPtr(rpcs_key_pair_[index]),
                             service_contact_[server_index],
                             std::bind(&TestFindValueCallback, args::_1,
                                       args::_2, args::_3, args::_4, args::_5,
@@ -1725,7 +1726,7 @@ class RpcsMultiServerNodesTest : public RoutingTableManipulator,
     ldone = false;
     *response_code = kGeneralError;
     rpcs_[index]->Delete(key, kvs.value, kvs.signature,
-                         GetPrivateKeyPtr(rpcs_key_pair_[index]),
+                         this->GetPrivateKeyPtr(rpcs_key_pair_[index]),
                          service_contact_[server_index],
                          std::bind(&TestCallback, args::_1, args::_2,
                                    &ldone, response_code));
@@ -1740,7 +1741,7 @@ class RpcsMultiServerNodesTest : public RoutingTableManipulator,
     *done = false;
     *response_code = kGeneralError;
     rpcs_[index]->FindValue(key, g_kKademliaK,
-                            GetPrivateKeyPtr(rpcs_key_pair_[index]),
+                            this->GetPrivateKeyPtr(rpcs_key_pair_[index]),
                             service_contact_[server_index],
                             std::bind(&TestFindValueCallback, args::_1,
                                       args::_2, args::_3, args::_4, args::_5,

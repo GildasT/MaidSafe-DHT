@@ -31,15 +31,10 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "boost/serialization/nvp.hpp"
-#include "maidsafe/common/platform_config.h"
-#include "maidsafe/dht/config.h"
-#include "maidsafe/dht/version.h"
 
-#if MAIDSAFE_DHT_VERSION != 3300
-#  error This API is not compatible with the installed library.\
-    Please update the maidsafe-dht library.
-#endif
+#include "boost/serialization/nvp.hpp"
+
+#include "maidsafe/dht/config.h"
 
 
 namespace maidsafe {

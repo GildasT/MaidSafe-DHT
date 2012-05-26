@@ -40,13 +40,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "boost/signals2/signal.hpp"
 
 #include "maidsafe/common/rsa.h"
-#include "maidsafe/dht/return_codes.h"
-#include "maidsafe/dht/version.h"
 
-#if MAIDSAFE_DHT_VERSION != 3300
-#  error This API is not compatible with the installed library.\
-    Please update the maidsafe-dht library.
-#endif
+#include "maidsafe/dht/return_codes.h"
 
 
 namespace maidsafe {

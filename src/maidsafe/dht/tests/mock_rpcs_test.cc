@@ -417,8 +417,8 @@ TEST_F(MockRpcsTest, BEH_Ping) {
     boost::mutex m;
     EXPECT_CALL(*rpcs, Prepare(testing::_, testing::_, testing::_))
         .WillOnce(testing::WithArgs<0, 1, 2>(testing::Invoke(
-            std::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
-                      rpcs.get(), args::_1, args::_2, args::_3))));
+            boost::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
+                        rpcs.get(), _1, _2, _3))));
 
     RpcPingFunctor pf = std::bind(&MockRpcsTest::Callback, this, args::_1,
                                   args::_2, &b, &m, &result);
@@ -477,8 +477,8 @@ TEST_F(MockRpcsTest, BEH_Store) {
     boost::mutex m;
     EXPECT_CALL(*rpcs, Prepare(testing::_, testing::_, testing::_))
         .WillOnce(testing::WithArgs<0, 1, 2>(testing::Invoke(
-            std::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
-                      rpcs.get(), args::_1, args::_2, args::_3))));
+            boost::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
+                        rpcs.get(), _1, _2, _3))));
 
     RpcStoreFunctor sf = std::bind(&MockRpcsTest::Callback, this, args::_1,
                                    args::_2, &b, &m, &result);
@@ -538,8 +538,8 @@ TEST_F(MockRpcsTest, BEH_StoreRefresh) {
     boost::mutex m;
     EXPECT_CALL(*rpcs, Prepare(testing::_, testing::_, testing::_))
         .WillOnce(testing::WithArgs<0, 1, 2>(testing::Invoke(
-            std::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
-                      rpcs.get(), args::_1, args::_2, args::_3))));
+            boost::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
+                        rpcs.get(), _1, _2, _3))));
 
     RpcStoreRefreshFunctor srf = std::bind(&MockRpcsTest::Callback, this,
                                            args::_1, args::_2, &b, &m, &result);
@@ -596,8 +596,8 @@ TEST_F(MockRpcsTest, BEH_Delete) {
     boost::mutex m;
     EXPECT_CALL(*rpcs, Prepare(testing::_, testing::_, testing::_))
         .WillOnce(testing::WithArgs<0, 1, 2>(testing::Invoke(
-            std::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
-                      rpcs.get(), args::_1, args::_2, args::_3))));
+            boost::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
+                        rpcs.get(), _1, _2, _3))));
 
     RpcDeleteFunctor df = std::bind(&MockRpcsTest::Callback, this, args::_1,
                                     args::_2, &b, &m, &result);
@@ -654,8 +654,8 @@ TEST_F(MockRpcsTest, BEH_DeleteRefresh) {
     boost::mutex m;
     EXPECT_CALL(*rpcs, Prepare(testing::_, testing::_, testing::_))
         .WillOnce(testing::WithArgs<0, 1, 2>(testing::Invoke(
-            std::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
-                      rpcs.get(), args::_1, args::_2, args::_3))));
+            boost::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
+                        rpcs.get(), _1, _2, _3))));
 
     RpcDeleteRefreshFunctor drf = std::bind(&MockRpcsTest::Callback, this,
                                             args::_1, args::_2, &b, &m,
@@ -713,8 +713,8 @@ TEST_F(MockRpcsTest, BEH_FindNodes) {
     boost::mutex m;
     EXPECT_CALL(*rpcs, Prepare(testing::_, testing::_, testing::_))
         .WillOnce(testing::WithArgs<0, 1, 2>(testing::Invoke(
-            std::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
-                      rpcs.get(), args::_1, args::_2, args::_3))));
+            boost::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
+                        rpcs.get(), _1, _2, _3))));
 
     RpcFindNodesFunctor fnf = std::bind(&MockRpcsTest::FindNodesCallback, this,
                                         args::_1, args::_2, args::_3, &b, &m,
@@ -773,8 +773,8 @@ TEST_F(MockRpcsTest, BEH_FindValue) {
     boost::mutex m;
     EXPECT_CALL(*rpcs, Prepare(testing::_, testing::_, testing::_))
         .WillOnce(testing::WithArgs<0, 1, 2>(testing::Invoke(
-            std::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
-                      rpcs.get(), args::_1, args::_2, args::_3))));
+            boost::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
+                        rpcs.get(), _1, _2, _3))));
 
     RpcFindValueFunctor fvf = std::bind(&MockRpcsTest::FindValueCallback, this,
                                         args::_1, args::_2, args::_3, args::_4,
@@ -832,8 +832,8 @@ TEST_F(MockRpcsTest, BEH_Downlist) {
 
   EXPECT_CALL(*rpcs, Prepare(testing::_, testing::_, testing::_))
       .WillOnce(testing::WithArgs<0, 1, 2>(testing::Invoke(
-          std::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
-                    rpcs.get(), args::_1, args::_2, args::_3))));
+          boost::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
+                      rpcs.get(), _1, _2, _3))));
 
   rpcs->Downlist(node_ids, private_key_, peer_);
   while (!MockMessageHandler::ops_completion_flag) {

@@ -52,14 +52,9 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "maidsafe/dht/config.h"
 #include "maidsafe/dht/message_handler.h"
-#include "maidsafe/dht/version.h"
 #include "maidsafe/dht/node-api.h"
 #include "maidsafe/dht/return_codes.h"
 
-#if MAIDSAFE_DHT_VERSION != 3300
-#  error This API is not compatible with the installed library.\
-    Please update the maidsafe-dht library.
-#endif
 
 namespace args = std::placeholders;
 namespace bptime = boost::posix_time;
@@ -229,7 +224,7 @@ class NodeContainer {
 
  protected:
   AsioService asio_service_;
-  TransportPtr listening_transport_;
+  std::shared_ptr<transport::RudpTransport> listening_transport_;
   MessageHandlerPtr message_handler_;
   KeyPairPtr key_pair_;
   std::shared_ptr<NodeType> node_;

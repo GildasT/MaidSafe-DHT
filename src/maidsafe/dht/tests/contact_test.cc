@@ -199,7 +199,7 @@ TEST_F(ContactTest, BEH_OverloadedOperators) {
       transport::Endpoint("192.168.1.56", 8889));
   std::vector<transport::Endpoint> locals2(1,
       transport::Endpoint("192.168.1.57", 8890));
-  transport::Endpoint rv_endpoint1("192.168.1.58", 8891);
+//  transport::Endpoint rv_endpoint1("192.168.1.58", 8891);
   transport::Endpoint rv_endpoint2("192.168.1.59", 8892);
   Contact contact1(kNodeId_, kEndpoint_, locals1, transport::Endpoint(), false,
                    false, "", asymm::PublicKey(), "");
@@ -527,13 +527,13 @@ TEST_F(ContactTest, BEH_ContactSerializationFileOperations) {
   ASSERT_EQ(0, error_code.value());
   fs::path file(file_path.string() + "/contacts.xml");
 
-  transport::Endpoint endpoint1("192.168.1.48", 8891);
-  transport::Endpoint endpoint2("192.168.1.44", 8896);
+//  transport::Endpoint endpoint1("192.168.1.48", 8891);
+//  transport::Endpoint endpoint2("192.168.1.44", 8896);
   std::vector<transport::Endpoint> locals(1,
       transport::Endpoint("192.168.1.56", 8889));
   std::vector<transport::Endpoint> locals2(1,
       transport::Endpoint("192.168.1.57", 8890));
-  transport::Endpoint rv_endpoint("192.168.1.58", 8891);
+//  transport::Endpoint rv_endpoint("192.168.1.58", 8891);
   transport::Endpoint rv_endpoint2("192.168.1.59", 8892);
   Contact contact1(kNodeId_, kEndpoint_, locals, transport::Endpoint(), false,
                    false, "aaa", asymm::PublicKey(), "ccc");

@@ -25,6 +25,7 @@ TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "maidsafe/dht/node-api.h"
 #include <algorithm>
 #include <functional>
 #include <map>
@@ -1581,8 +1582,7 @@ void NodeImpl::ConnectPingOldestContact() {
   if (ping_oldest_contact_ == boost::signals2::connection()) {
     ping_oldest_contact_ =
         routing_table_->ping_oldest_contact().connect(
-            std::bind(&NodeImpl::PingOldestContact, this, args::_1, args::_2,
-                      args::_3));
+            boost::bind(&NodeImpl::PingOldestContact, this, _1, _2, _3));
   }
 }
 
@@ -1605,7 +1605,7 @@ void NodeImpl::ValidateContactCallback(
 void NodeImpl::ConnectValidateContact() {
   if (validate_contact_ == boost::signals2::connection()) {
     validate_contact_ = routing_table_->validate_contact().connect(
-        std::bind(&NodeImpl::ValidateContact, this, args::_1));
+        boost::bind(&NodeImpl::ValidateContact, this, _1));
   }
 }
 
@@ -1637,7 +1637,7 @@ void NodeImpl::PingDownContactCallback(Contact down_contact,
 void NodeImpl::ConnectPingDownContact() {
   if (ping_down_contact_ == boost::signals2::connection()) {
     ping_down_contact_ = routing_table_->ping_down_contact().connect(
-        std::bind(&NodeImpl::PingDownContact, this, args::_1));
+        boost::bind(&NodeImpl::PingDownContact, this, _1));
   }
 }
 

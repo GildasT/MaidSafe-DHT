@@ -70,12 +70,12 @@ const uint16_t g_kKademliaK = 16;
 
 boost::posix_time::time_duration time_out = transport::kDefaultInitialTimeout;
 
-inline void CreateRSAKeys(std::string *public_key, std::string *private_key) {
-  asymm::Keys kp;
-  asymm::GenerateKeyPair(&kp);
-  asymm::EncodePublicKey(kp.public_key, public_key);
-  asymm::EncodePrivateKey(kp.private_key, private_key);
-}
+// inline void CreateRSAKeys(std::string *public_key, std::string *private_key) {
+//   asymm::Keys kp;
+//   asymm::GenerateKeyPair(&kp);
+//   asymm::EncodePublicKey(kp.public_key, public_key);
+//   asymm::EncodePrivateKey(kp.private_key, private_key);
+// }
 
 }  // unnamed namespace
 
@@ -1185,8 +1185,8 @@ TEST_F(ServicesTest, BEH_Downlist) {
   boost::mutex mutex;
   boost::condition_variable cond_var;
   routing_table_->ping_down_contact().connect(
-      std::bind(&ServicesTest::PingDownlistCallback, this, args::_1,
-                &pinged_node_ids, &mutex, &cond_var));
+      boost::bind(&ServicesTest::PingDownlistCallback, this, _1,
+                  &pinged_node_ids, &mutex, &cond_var));
   {
     boost::mutex::scoped_lock lock(mutex);
     service_->Downlist(info_, downlist_notification, &time_out);
