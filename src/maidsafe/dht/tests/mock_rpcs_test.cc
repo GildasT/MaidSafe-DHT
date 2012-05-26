@@ -50,12 +50,13 @@ namespace test {
 namespace {
 
 // Mock the RudpTransport class
-class RpcsMockTransport : public transport::Transport {
+template <typename TransportType>
+class RpcsMockTransport : public TransportType {
  public:
   RpcsMockTransport(boost::asio::io_service &asio_service,  // NOLINT
                     const uint16_t &repeat_factor,
                     uint16_t failure_tolerance)
-      : Transport(asio_service),
+      : TransportType(asio_service),
         repeat_factor_(repeat_factor),
         failure_tolerance_(failure_tolerance) {}
   ~RpcsMockTransport() {}
@@ -299,13 +300,13 @@ class MockRpcs : public Rpcs<TransportType> {
         repeat_factor_(repeat_factor),
         result_type_(result_type) {}
   MOCK_METHOD3_T(Prepare, void(PrivateKeyPtr private_key,
-                               TransportPtr &transport,
+                               std::shared_ptr<TransportType> &transport,
                                MessageHandlerPtr &message_handler));
   void MockPrepare(PrivateKeyPtr private_key,
-                   TransportPtr &transport,
+                   std::shared_ptr<TransportType> &transport,
                    MessageHandlerPtr &message_handler) {
-    transport.reset(new RpcsMockTransport(this->asio_service_, repeat_factor_,
-                                          this->kFailureTolerance_));
+    transport.reset(new RpcsMockTransport<TransportType>(
+        this->asio_service_, repeat_factor_, this->kFailureTolerance_));
     message_handler.reset(new MockMessageHandler(private_key,
                                                  request_type_,
                                                  result_type_));
@@ -408,17 +409,17 @@ TEST_F(MockRpcsTest, BEH_Ping) {
   for (int i = 0; i < 5; ++i) {
     std::shared_ptr<MockRpcs<transport::RudpTransport>> rpcs(
         new MockRpcs<transport::RudpTransport>(asio_service_,
-                                              private_key_,
-                                              kPingRequest,
-                                              repeat_factor,
-                                              result_type));
+                                               private_key_,
+                                               kPingRequest,
+                                               repeat_factor,
+                                               result_type));
     bool b(false), b2(false);
     int result(999);
     boost::mutex m;
     EXPECT_CALL(*rpcs, Prepare(testing::_, testing::_, testing::_))
         .WillOnce(testing::WithArgs<0, 1, 2>(testing::Invoke(
-            boost::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
-                        rpcs.get(), _1, _2, _3))));
+            std::bind(&MockRpcs<transport::RudpTransport>::MockPrepare,
+                        rpcs.get(), args::_1, args::_2, args::_3))));
 
     RpcPingFunctor pf = std::bind(&MockRpcsTest::Callback, this, args::_1,
                                   args::_2, &b, &m, &result);

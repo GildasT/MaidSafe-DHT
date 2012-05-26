@@ -247,22 +247,22 @@ TEST_F(SenderTaskTest, FUNC_SenderTaskCallbackMultiThreaded) {
   uint16_t i(0);
   // Tasks to be executed and removed
   for (i = 0; i < 10; ++i) {
-    asymm::GenerateKeyPair(&  crypto_key_data);
+    asymm::GenerateKeyPair(&crypto_key_data);
     KeyValueSignature kvs = MakeKVS(crypto_key_data, 1024, "", "");
     EXPECT_TRUE(sender_task_->AddTask(kvs, info_, request_signature,
                 "public_key_id_1", task_cb_1, &is_new_id));
     EXPECT_TRUE(HasDataInIndex(kvs, request_signature, "public_key_id_1"));
-    asymm::GenerateKeyPair(&  crypto_key_data);
+    asymm::GenerateKeyPair(&crypto_key_data);
     kvs = MakeKVS(crypto_key_data, 1024, "", "");
     EXPECT_TRUE(sender_task_->AddTask(kvs, info_, request_signature,
                 "public_key_id_1", task_cb_2, &is_new_id));
     EXPECT_TRUE(HasDataInIndex(kvs, request_signature, "public_key_id_1"));
-    asymm::GenerateKeyPair(&  crypto_key_data);
+    asymm::GenerateKeyPair(&crypto_key_data);
     kvs = MakeKVS(crypto_key_data, 1024, "", "");
     EXPECT_TRUE(sender_task_->AddTask(kvs, info_, request_signature,
                 "public_key_id_2", task_cb_1, &is_new_id));
     EXPECT_TRUE(HasDataInIndex(kvs, request_signature, "public_key_id_2"));
-    asymm::GenerateKeyPair(&  crypto_key_data);
+    asymm::GenerateKeyPair(&crypto_key_data);
     kvs = MakeKVS(crypto_key_data, 1024, "", "");
     EXPECT_TRUE(sender_task_->AddTask(kvs, info_, request_signature,
                 "public_key_id_2", task_cb_2, &is_new_id));
@@ -272,19 +272,19 @@ TEST_F(SenderTaskTest, FUNC_SenderTaskCallbackMultiThreaded) {
   std::vector<KeyValueSignature> kvs_vector;
   // Tasks added and not executed and removed
   for (i = 0; i < 3; ++i) {
-    asymm::GenerateKeyPair(&  crypto_key_data);
+    asymm::GenerateKeyPair(&crypto_key_data);
     KeyValueSignature kvs = MakeKVS(crypto_key_data, 1024, "", "");
     kvs_vector.push_back(kvs);
-    asio_thread_group_.create_thread([&] {
-        sender_task_->AddTask(kvs, info_, request_signature, "public_key_id_3", task_cb_1,
-                              &is_new_id);
+    asio_thread_group_.create_thread([=, &is_new_id] {
+        sender_task_->AddTask(kvs, info_, request_signature, "public_key_id_3",
+                              task_cb_1, &is_new_id);
     });
-    asymm::GenerateKeyPair(&  crypto_key_data);
+    asymm::GenerateKeyPair(&crypto_key_data);
     kvs = MakeKVS(crypto_key_data, 1024, "", "");
     kvs_vector.push_back(kvs);
-    asio_thread_group_.create_thread([&] {
-        sender_task_->AddTask(kvs, info_, request_signature, "public_key_id_4", task_cb_2,
-                              &is_new_id);
+    asio_thread_group_.create_thread([=, &is_new_id] {
+        sender_task_->AddTask(kvs, info_, request_signature, "public_key_id_4",
+                              task_cb_2, &is_new_id);
     });
   }
   asio_thread_group_.join_all();
