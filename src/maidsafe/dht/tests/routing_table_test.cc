@@ -63,7 +63,8 @@ class RoutingTableTest : public RoutingTableManipulator,
         rank_info_(),
         k_(static_cast<uint16_t>(GetParam())),
         contact_(ComposeContact(NodeId(NodeId::kRandomId), 6101)),
-        thread_barrier_(new boost::barrier(kThreadBarrierSize)) {}
+        thread_barrier_(new boost::barrier(kThreadBarrierSize)),
+        mutex_() {}
 
   // Methods for multithreaded test
   void DoAddContact(Contact contact) {
@@ -73,12 +74,16 @@ class RoutingTableTest : public RoutingTableManipulator,
   }
 
   void DoGetCloseContacts(const size_t &count) {
-    NodeId target_id(GenerateUniqueRandomId(12));
+    NodeId target_id;
+    {
+      boost::mutex::scoped_lock lock(mutex_);
+      target_id = GenerateUniqueRandomId(12);
+    }
     std::vector<Contact> close_contacts;
     std::vector<Contact> exclude_contacts;
     thread_barrier_->wait();
     routing_table_->GetCloseContacts(target_id, count, exclude_contacts,
-                                    close_contacts);
+                                     close_contacts);
     EXPECT_EQ(size_t(count), close_contacts.size());
   }
 
@@ -132,6 +137,7 @@ class RoutingTableTest : public RoutingTableManipulator,
   uint16_t k_;
   Contact contact_;
   std::shared_ptr<boost::barrier> thread_barrier_;
+  boost::mutex mutex_;
 };
 
 
