@@ -86,14 +86,15 @@ class RpcsMockTransport : public TransportType {
   void SignalError() {
     Sleep(boost::posix_time::milliseconds(500));
     ++repeat_factor_;
-    (*on_error())(transport::kError, transport::Endpoint());
+    (*TransportType::on_error())(transport::kError, transport::Endpoint());
   }
   void SignalMessageReceived(std::string data) {
     Sleep(boost::posix_time::milliseconds(500));
     transport::Info info;
     transport::Timeout response_timeout(transport::kImmediateTimeout);
     std::string response("response");
-    (*on_message_received())(data, info, &response, &response_timeout);
+    (*TransportType::on_message_received())(data, info, &response,
+                                            &response_timeout);
   }
 
  protected:
