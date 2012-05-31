@@ -89,7 +89,7 @@ void Node::Update(const Key &key,
 
 void Node::FindValue(const Key &key,
                      PrivateKeyPtr private_key,
-                     FindValueFunctor callback,
+                     std::function<void(FindValueReturns)> callback,
                      const uint16_t &extra_contacts,
                      bool cache) {
   pimpl_->FindValue(key, private_key, callback, extra_contacts, cache);

@@ -40,7 +40,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "boost/signals2/signal.hpp"
 
 #include "maidsafe/common/rsa.h"
-
 #include "maidsafe/dht/return_codes.h"
 
 
@@ -54,13 +53,10 @@ struct Info;
 
 namespace dht {
 
-class Contact;
-class NodeId;
-class MessageHandler;
 
 enum OnlineStatus { kOffline, kOnline, kAttemptingConnect };
 
-struct FindValueReturns;
+//struct FindValueReturns;
 
 typedef std::pair<std::string, std::string> ValueAndSignature;
 
@@ -72,19 +68,8 @@ typedef std::shared_ptr<boost::signals2::signal<void(OnlineStatus)>>
 typedef std::function<void(int)> JoinFunctor, StoreFunctor, DeleteFunctor,  // NOLINT (Fraser)
                                  UpdateFunctor, PingFunctor;
 
-// Functor for use in Node::FindValue.  Parameters in order are: return code,
-// value(s) and signature(s) if found, k closest nodes if value not found,
-// contact details of node holding cached value outside of kademlia's DataStore,
-// and contact details of node needing a cache copy of the values.
-typedef std::function<void(FindValueReturns)> FindValueFunctor;
 
-// Functor for use in Node::FindNodes.  Parameters in order are: return code,
-// k closest nodes.
-typedef std::function<void(int, std::vector<Contact>)> FindNodesFunctor;
 
-// Functor for use in Node::GetContact.  Parameters in order are: return code,
-// node's contact details.
-typedef std::function<void(int, Contact)> GetContactFunctor;
 
 // Functor to be used as a predicate in waits and timed_waits.
 typedef std::function<bool()> WaitFunctor;
@@ -92,13 +77,13 @@ typedef std::function<bool()> WaitFunctor;
 typedef std::function<bool(const std::string&)> CheckCacheFunctor;  // NOLINT (Fraser)
 
 
-typedef NodeId Key;
+
 typedef boost::asio::ip::address IP;
 typedef uint16_t Port;
 
 
-typedef std::shared_ptr<MessageHandler> MessageHandlerPtr;
-typedef std::shared_ptr<transport::Transport> TransportPtr;
+
+typedef std::unique_ptr<transport::Transport> TransportPtr;
 typedef std::shared_ptr<asymm::Keys> KeyPairPtr;
 typedef std::shared_ptr<asymm::PrivateKey> PrivateKeyPtr;
 typedef std::shared_ptr<asymm::PublicKey> PublicKeyPtr;

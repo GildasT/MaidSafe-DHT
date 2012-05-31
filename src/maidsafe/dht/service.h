@@ -94,7 +94,7 @@ class Service : public std::enable_shared_from_this<Service> {
   /** Connect to Signals.
    *  @param transport The Transportor to link.
    *  @param message_handler The Message Handler to link. */
-  void ConnectToSignals(MessageHandlerPtr message_handler);
+  void ConnectToSignals(std::shared_ptr<MessageHandler> message_handler);
   /** Handle Ping request.
    *  The request sender will be added into the routing table
    *  @param[in] info The rank info.
@@ -218,7 +218,7 @@ class Service : public std::enable_shared_from_this<Service> {
    *  @param[in] message Serialised message.
    *  @param[in] message_signature Message signature. */
   bool CheckParameters(const std::string &method_name,
-                       const Key *key = nullptr,
+                       const NodeId *key = nullptr,
                        const std::string *message = nullptr,
                        const std::string *message_signature = nullptr) const;
   /** Store Callback.

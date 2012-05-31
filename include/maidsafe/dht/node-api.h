@@ -40,7 +40,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "boost/asio/io_service.hpp"
 #include "boost/date_time/posix_time/posix_time_types.hpp"
-
+#include "maidsafe/dht/message_handler.h"
+#include "maidsafe/dht/node_id.h"
 #include "maidsafe/dht/contact.h"
 #include "maidsafe/dht/config.h"
 
@@ -48,8 +49,33 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace maidsafe {
 
 namespace dht {
+typedef NodeId Key;
 
 class NodeImpl;
+
+struct FindValueReturns {
+  FindValueReturns() : return_code(kPendingResult),
+                       values_and_signatures(),
+                       closest_nodes(),
+                       cached_copy_holder(),
+                       needs_cache_copy() {}
+  FindValueReturns(
+      int return_code_in,
+      const std::vector<ValueAndSignature> &values_and_signatures_in,
+      const std::vector<Contact> &closest_nodes_in,
+      const Contact &cached_copy_holder_in,
+      const Contact &needs_cache_copy_in)
+          : return_code(return_code_in),
+            values_and_signatures(values_and_signatures_in),
+            closest_nodes(closest_nodes_in),
+            cached_copy_holder(cached_copy_holder_in),
+            needs_cache_copy(needs_cache_copy_in) {}
+  int return_code;
+  std::vector<ValueAndSignature> values_and_signatures;
+  std::vector<Contact> closest_nodes;
+  Contact cached_copy_holder;
+  Contact needs_cache_copy;
+};
 
 // This class represents a kademlia node providing the API to join the network,
 // find nodes and values, store, delete and update values, as well as the
@@ -80,9 +106,9 @@ class Node {
   // mean_refresh_interval indicates the average interval between calls to
   // refresh values.
   Node(boost::asio::io_service &asio_service,                 // NOLINT (Fraser)
-       TransportPtr listening_transport,
-       MessageHandlerPtr message_handler,
-       KeyPairPtr default_key_pair,
+       transport::TransportPtr listening_transport,
+       std::shared_ptr<MessageHandler> message_handler,
+       std::shared_ptr<asymm::Keys> default_key_pair,
        bool client_only_node,
        const uint16_t &k,
        const uint16_t &alpha,
@@ -172,7 +198,7 @@ class Node {
   // the cached_copy_holder or as one of the closest contacts.
   void FindValue(const Key &key,
                  PrivateKeyPtr private_key,
-                 FindValueFunctor callback,
+                 std::function<void(FindValueReturns)> callback,
                  const uint16_t &extra_contacts = 0,
                  bool cache = true);
 
@@ -253,30 +279,6 @@ class Node {
   std::unique_ptr<NodeImpl> pimpl_;
 };
 
-
-struct FindValueReturns {
-  FindValueReturns() : return_code(kPendingResult),
-                       values_and_signatures(),
-                       closest_nodes(),
-                       cached_copy_holder(),
-                       needs_cache_copy() {}
-  FindValueReturns(
-      int return_code_in,
-      const std::vector<ValueAndSignature> &values_and_signatures_in,
-      const std::vector<Contact> &closest_nodes_in,
-      const Contact &cached_copy_holder_in,
-      const Contact &needs_cache_copy_in)
-          : return_code(return_code_in),
-            values_and_signatures(values_and_signatures_in),
-            closest_nodes(closest_nodes_in),
-            cached_copy_holder(cached_copy_holder_in),
-            needs_cache_copy(needs_cache_copy_in) {}
-  int return_code;
-  std::vector<ValueAndSignature> values_and_signatures;
-  std::vector<Contact> closest_nodes;
-  Contact cached_copy_holder;
-  Contact needs_cache_copy;
-};
 
 }  // namespace dht
 

@@ -34,7 +34,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "boost/thread/condition_variable.hpp"
 #include "boost/thread/mutex.hpp"
-
+#include "maidsafe/dht/message_handler.h"
 #include "maidsafe/transport/transport.h"
 
 #include "maidsafe/dht/config.h"
@@ -47,16 +47,16 @@ namespace dht {
 /* This class temporarily holds the connected objects of RPCs to ensure all
  * resources can be correctly released and no memory leaked.
  */
+typedef std::shared_ptr<MessageHandler> MessageHandlerPtr;
 class ConnectedObjectsList  {
  public:
-  typedef std::map<uint32_t, std::pair<TransportPtr, MessageHandlerPtr>>
-      ObjectsContainer;
+  typedef std::map<uint32_t, std::pair<TransportPtr, MessageHandlerPtr >> ObjectsContainer;
 
   ConnectedObjectsList();
   ~ConnectedObjectsList();
 
   // Adds connected objects to the container and returns their index.
-  uint32_t AddObject(const TransportPtr transport,
+  uint32_t AddObject(const std::unique_ptr<transport::Transport> transport,
                      const MessageHandlerPtr message_handler);
 
   // Tries to remove existing entry based on index, returns whether successful.
@@ -64,7 +64,7 @@ class ConnectedObjectsList  {
 
   // Sends message if concurrent RPCs below limit, otherwise calls OnError.
   static void TryToSend(boost::asio::io_service &asio_service,  // NOLINT
-                        const TransportPtr transport,
+                        const std::unique_ptr<transport::Transport> transport,
                         const std::string &data,
                         const transport::Endpoint &endpoint,
                         const transport::Timeout &timeout);

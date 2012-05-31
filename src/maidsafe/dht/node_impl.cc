@@ -56,7 +56,7 @@ namespace args = std::placeholders;
 
 namespace maidsafe {
 namespace dht {
-
+typedef std::function<void(FindValueReturns)> FindValueFunctor;
 namespace {
 bool FindResultError(int result) {
   return (result != kSuccess &&

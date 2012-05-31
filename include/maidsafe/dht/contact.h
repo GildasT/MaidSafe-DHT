@@ -52,6 +52,8 @@ namespace maidsafe {
 
 namespace dht {
 
+
+
 /** Object containing a Node's Kademlia ID and details of its endpoint(s).
  *  @class Contact */
 class Contact {  // : public transport::Contact {
@@ -184,6 +186,13 @@ class Contact {  // : public transport::Contact {
   transport::Contact transport_details_;
 };
 
+// Functor for use in Node::FindNodes.  Parameters in order are: return code,
+// k closest nodes.
+typedef std::function<void(int, std::vector<Contact>)> FindNodesFunctor;
+
+// Functor for use in Node::GetContact.  Parameters in order are: return code,
+// node's contact details.
+typedef std::function<void(int, Contact)> GetContactFunctor;
 
 /** Returns an abbreviated hex representation of contact's NodeId */
 std::string DebugId(const Contact &contact);

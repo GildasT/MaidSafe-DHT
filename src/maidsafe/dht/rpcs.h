@@ -138,7 +138,7 @@ class Rpcs {
   void set_contact(const Contact &contact) { contact_ = contact; }
 
   virtual void Prepare(PrivateKeyPtr private_key,
-                       std::shared_ptr<TransportType> &transport,
+                       std::unique_ptr<TransportType> &transport,
                        MessageHandlerPtr &message_handler);
 
   std::pair<std::string, std::string> MakeStoreRequestAndSignature(
@@ -233,7 +233,7 @@ template <typename TransportType>
 void Rpcs<TransportType>::Ping(PrivateKeyPtr private_key,
                                const Contact &peer,
                                RpcPingFunctor callback) {
-  std::shared_ptr<TransportType> transport;
+  std::unique_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -267,7 +267,7 @@ void Rpcs<TransportType>::FindValue(const Key &key,
                                     PrivateKeyPtr private_key,
                                     const Contact &peer,
                                     RpcFindValueFunctor callback) {
-  std::shared_ptr<TransportType> transport;
+  std::unique_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -301,7 +301,7 @@ void Rpcs<TransportType>::FindNodes(const Key &key,
                                     PrivateKeyPtr private_key,
                                     const Contact &peer,
                                     RpcFindNodesFunctor callback) {
-  std::shared_ptr<TransportType> transport;
+  std::unique_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -375,7 +375,7 @@ void Rpcs<TransportType>::StoreRefresh(
     PrivateKeyPtr private_key,
     const Contact &peer,
     RpcStoreRefreshFunctor callback) {
-  std::shared_ptr<TransportType> transport;
+  std::unique_ptr<TransportType> transport;
   MessageHandlerPtr message_handler;
   Prepare(private_key, transport, message_handler);
   uint32_t object_indx =
@@ -759,7 +759,7 @@ void Rpcs<TransportType>::DeleteRefreshCallback(
 
 template <typename TransportType>
 void Rpcs<TransportType>::Prepare(PrivateKeyPtr private_key,
-                                  std::shared_ptr<TransportType> &transport,
+                                  std::unique_ptr<TransportType> &transport,
                                   MessageHandlerPtr &message_handler) {
   transport.reset(new TransportType(asio_service_));
   message_handler.reset(new MessageHandler(private_key ? private_key :

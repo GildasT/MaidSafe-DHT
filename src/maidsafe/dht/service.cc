@@ -75,7 +75,7 @@ Service::Service(std::shared_ptr<RoutingTable> routing_table,
 
 Service::~Service() {}
 
-void Service::ConnectToSignals(MessageHandlerPtr message_handler) {
+void Service::ConnectToSignals(std::shared_ptr<MessageHandler> message_handler) {
   // Connect service to message handler for incoming parsed requests
   message_handler->on_ping_request()->connect(
       MessageHandler::PingReqSigPtr::element_type::slot_type(
@@ -112,7 +112,7 @@ void Service::ConnectToSignals(MessageHandlerPtr message_handler) {
 }
 
 bool Service::CheckParameters(const std::string &method_name,
-                              const Key *key,
+                              const NodeId *key,
                               const std::string *message,
                               const std::string *message_signature) const {
   std::string debug_msg(DebugId(node_contact_) + " - in " + method_name + ": ");
@@ -157,7 +157,7 @@ void Service::FindValue(const transport::Info &info,
                         protobuf::FindValueResponse *response,
                         transport::Timeout*) {
   response->set_result(false);
-  Key key(request.key());
+  NodeId key(request.key());
   if (!CheckParameters("FindValue", &key))
     return;
 
@@ -203,7 +203,7 @@ void Service::FindNodes(const transport::Info &info,
                         protobuf::FindNodesResponse *response,
                         transport::Timeout*) {
   response->set_result(false);
-  Key key(request.key());
+  NodeId key(request.key());
   if (!CheckParameters("FindNodes", &key))
     return;
 
@@ -232,7 +232,7 @@ void Service::Store(const transport::Info &info,
                     protobuf::StoreResponse *response,
                     transport::Timeout*) {
   response->set_result(false);
-  Key key(request.key());
+  NodeId key(request.key());
   if (!CheckParameters("Store", &key, &message, &message_signature))
     return;
 
@@ -287,7 +287,7 @@ void Service::StoreRefresh(const transport::Info &info,
     return;
   }
 
-  if (!Key(ori_store_request.key()).IsValid()) {
+  if (!NodeId(ori_store_request.key()).IsValid()) {
     DLOG(WARNING) << DebugId(node_contact_) << ": Invalid key.";
     return;
   }
@@ -407,7 +407,7 @@ void Service::Delete(const transport::Info &info,
                      protobuf::DeleteResponse *response,
                      transport::Timeout*) {
   response->set_result(false);
-  Key key(request.key());
+  NodeId key(request.key());
   if (!CheckParameters("Delete", &key, &message, &message_signature))
     return;
 
@@ -468,7 +468,7 @@ void Service::DeleteRefresh(const transport::Info &info,
     return;
   }
 
-  if (!Key(ori_delete_request.key()).IsValid()) {
+  if (!NodeId(ori_delete_request.key()).IsValid()) {
     DLOG(WARNING) << DebugId(node_contact_) << ": Invalid key.";
     return;
   }

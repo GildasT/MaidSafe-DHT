@@ -155,7 +155,7 @@ class NodeImpl {
    *  @param[in] cache Whether to cache the value(s) if found. */
   void FindValue(const Key &key,
                  PrivateKeyPtr private_key,
-                 FindValueFunctor callback,
+                 std::function<void(FindValueReturns)> callback,
                  const uint16_t &extra_contacts = 0,
                  bool cache = true);
 
@@ -286,7 +286,7 @@ class NodeImpl {
   /** Runs the FindValue callback for the case where this node has the value(s)
    *  locally (i.e. cached outside of kademlia or in data_store_). */
   void FoundValueLocally(const FindValueReturns &find_value_returns,
-                         FindValueFunctor callback);
+                         std::function<void(FindValueReturns)> callback);
 
   /** Runs the GetContact callback for the case where it's this node's Contact
    *  which is the target. */

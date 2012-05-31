@@ -72,7 +72,7 @@ class NodeContainer {
   virtual void Init(
       uint8_t thread_count,
       KeyPairPtr key_pair,
-      MessageHandlerPtr message_handler,
+      std::shared_ptr<MessageHandler> message_handler,
       bool client_only_node,
       uint16_t k = 8,
       uint16_t alpha = 3,
@@ -154,7 +154,7 @@ class NodeContainer {
   void set_update_functor(const UpdateFunctor &functor) {
     update_functor_ = functor;
   }
-  void set_find_value_functor(const FindValueFunctor &functor) {
+  void set_find_value_functor(const std::function<void(FindValueReturns)> &functor) {
     find_value_functor_ = functor;
   }
   void set_find_nodes_functor(const FindNodesFunctor &functor) {
@@ -195,7 +195,7 @@ class NodeContainer {
   StoreFunctor store_functor() const { return store_functor_; }
   DeleteFunctor delete_functor() const { return delete_functor_; }
   UpdateFunctor update_functor() const { return update_functor_; }
-  FindValueFunctor find_value_functor() const { return find_value_functor_; }
+  std::function<void(FindValueReturns)> find_value_functor() const { return find_value_functor_; }
   FindNodesFunctor find_nodes_functor() const { return find_nodes_functor_; }
   GetContactFunctor get_contact_functor() const { return get_contact_functor_; }
   PingFunctor ping_functor() const { return ping_functor_; }
@@ -225,7 +225,7 @@ class NodeContainer {
  protected:
   AsioService asio_service_;
   std::shared_ptr<transport::RudpTransport> listening_transport_;
-  MessageHandlerPtr message_handler_;
+  std::shared_ptr<MessageHandler> message_handler_;
   KeyPairPtr key_pair_;
   std::shared_ptr<NodeType> node_;
   std::vector<Contact> bootstrap_contacts_;
@@ -277,7 +277,7 @@ class NodeContainer {
   StoreFunctor store_functor_;
   DeleteFunctor delete_functor_;
   UpdateFunctor update_functor_;
-  FindValueFunctor find_value_functor_;
+  std::function<void(FindValueReturns)> find_value_functor_;
   FindNodesFunctor find_nodes_functor_;
   GetContactFunctor get_contact_functor_;
   PingFunctor ping_functor_;
@@ -353,7 +353,7 @@ template <typename NodeType>
 void NodeContainer<NodeType>::Init(
     uint8_t thread_count,
     KeyPairPtr key_pair,
-    MessageHandlerPtr message_handler,
+    std::shared_ptr<MessageHandler> message_handler,
     bool client_only_node,
     uint16_t k,
     uint16_t alpha,

@@ -139,13 +139,13 @@ struct FindValueArgs : public LookupArgs {
                 const OrderedContacts &close_contacts,
                 bool cache_in,
                 PrivateKeyPtr private_key,
-                FindValueFunctor callback_in)
+                std::function<void(FindValueReturns)> callback_in)
       : LookupArgs(kFindValue, target, close_contacts, num_contacts_requested,
                    private_key),
         cache(cache_in),
         callback(callback_in) {}
   bool cache;
-  FindValueFunctor callback;
+  std::function<void(FindValueReturns)> callback;
 };
 
 struct StoreArgs : public LookupArgs {
