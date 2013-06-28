@@ -1,3 +1,10 @@
+This library has been depricated and is replaced with MaidSafe-routing, now found at https://github.com/maidsafe/MaidSafe/wiki 
+This now forms part of a much larger codebase and the DHT may still be used as a stand alone DHT (has some dependencies though which are met by the super project). 
+
+
+We welcome developers to join us over at https://github.com/maidsafe/MaidSafe/wiki.
+
+
 For full build instructions, see https://github.com/maidsafe/MaidSafe-DHT/wiki/Developer-Build-Instructions
 Abbreviated instructions can be found in build/<DirAppropriateToYourOS>/README
 
