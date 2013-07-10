@@ -8,4 +8,4 @@ We welcome developers to join us over at https://github.com/maidsafe/MaidSafe/wi
 For full build instructions, see https://github.com/maidsafe/MaidSafe-DHT/wiki/Developer-Build-Instructions
 Abbreviated instructions can be found in build/<DirAppropriateToYourOS>/README
 
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/b67b266eca531aae29c1b0a34d85f164 "githalytics.com")](http://githalytics.com/maidsafe/MaidSafe-DHT)
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/a99845d7aa40001cea85d61942c7358c "githalytics.com")](http://githalytics.com/maidsafe/MaidSafe-DHT)
